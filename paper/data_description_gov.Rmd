@@ -10,7 +10,8 @@ output:
 title: "The TGOV Dataset: 
    Comparative Estimates of Public Trust in Government 
    Across 116 Countries, 1973–2020"
-#thanks: "Corresponding author: [xxxx@xxx.edu](mailto:xxx@xxx.edu).  Current version: `r format(Sys.time(), '%B %d, %Y')`."
+   
+#thanks: "Corresponding author: [yhcasstai@psu.edu](mailto:yhcasstai@psu.edu). Current version: `r format(Sys.time(), '%B %d, %Y')`.  Replication materials and complete revision history may be found at [https://github.com/Tyhcass/TGOV](https://github.com/Tyhcass/TGOV). "
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 editor_options: 
   markdown: 
@@ -54,10 +55,10 @@ header-includes:
 
 # Authors {.unnumbered}
 
-- Yuehong Cassandra Tai, ORCID: <https://orcid.org/0000-0001-7303-7443>, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, [yhcasstai\@psu.edu](mailto:yhcasstai@psu.edu){.email}
-
+- Yuehong Cassandra Tai, corresponding author, ORCID: <https://orcid.org/0000-0001-7303-7443>, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, [yhcasstai\@psu.edu](mailto:yhcasstai@psu.edu){.email}
 
 \pagebreak
+
 
 ```{=tex}
 \renewcommand{\baselinestretch}{1}
@@ -643,9 +644,16 @@ For surveys without English-language codebooks, I first translated them into Eng
 To minimize potential oversight of relevant questions, I then conducted an additional search round using translated keywords within the original-language codebooks. 
 The question numbers, corresponding response scales, and survey weights were recorded directly from the codebooks.
 Since there might be potential discrepancies between response scales listed in codebooks and those coded within datasets, I manually verified alignment between survey questions and their coded scales.
- After raw data collection, I followed a standard practice and excluded survey items that were asked in fewer than five country-years in countries surveyed at least twice, in order to improve comparability and reduce uncertainty from sparse data. 
+The survey dataset codes was then further cleaned and prepared using the `DCPOtools` R package [@Solt2019], where the scales that required reordering were adjusted to reflect increasing levels of attitudes.
+For example, scales such as "a great deal of confidence (1), quite a lot of confidence (2), not very much confidence (3), or none at all (4)" were reversed, ensuring that lower numbers always corresponded to lower levels of trust, and higher numbers corresponded to higher levels of trust.
 
-Compared to other survey questions on public gender egalitarianism and gay rights, data on political trust in government is relative rich in terms of covered countries and years. 
+After collecting the raw data, I followed standard practice by excluding survey items that were rarely asked [@Woo2023].
+In this study, I took a conservative approach to exclude rare survey items.
+Specifically, I excluded items that were asked in fewer than five country-years in countries surveyed at least three times, using a two-round checking process [@Tai2025].
+This step was taken to improve comparability and reduce uncertainty from sparse data.
+
+
+Compared to other important survey questions on public gender egalitarianism [@Woo2023] and gay rights [@Woo2024], data on political trust in government is relative rich in terms of covered countries and years. 
 In the country-years span, among the `r spanned_cy` country-years, `r {back_to_numeric(n_cy)/back_to_numeric(spanned_cy) * 100} %>% round()`% of it has available information.
 However, if we have observations for every year in each country surveyed, the number would be `r total_cy`, and a complete set of country-year-items would encompass `r {n_countries * n_years * n_items} %>% scales::comma()` observations. 
 In fact, even collecting as many available national and cross-national data as possible, the current source data has `r n_cy` country-years and a total of `r n_cyi` country-year-item observations which are `r {back_to_numeric(n_cy)/back_to_numeric(total_cy) * 100} %>% round()`% of a complete set of total country-year and `r {back_to_numeric(n_cyi)/(n_countries * n_years * n_items) * 100} %>% round()`% of a complete set of country-year-items.
@@ -1351,7 +1359,7 @@ The current and future versions of the TGOV dataset offer invaluable opportuniti
 
 # Code Availability
 The software tools used for data processing are described in the Methods and Technical Validation sections.
-The code used to generate the dataset and conduct validation test are openly available at: 
+The code used to generate the dataset and conduct validation test are openly available at: https://github.com/Tyhcass/TGOV.
 
 # References {.unlisted .unnumbered}
 

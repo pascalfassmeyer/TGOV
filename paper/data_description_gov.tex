@@ -154,7 +154,7 @@
 \begin{itemize}
 \tightlist
 \item
-  Yuehong Cassandra Tai, ORCID: \url{https://orcid.org/0000-0001-7303-7443}, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, \href{mailto:yhcasstai@psu.edu}{\nolinkurl{yhcasstai@psu.edu}}
+  Yuehong Cassandra Tai, corresponding author, ORCID: \url{https://orcid.org/0000-0001-7303-7443}, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, \href{mailto:yhcasstai@psu.edu}{\nolinkurl{yhcasstai@psu.edu}}
 \end{itemize}
 
 \pagebreak
@@ -215,9 +215,15 @@ For surveys without English-language codebooks, I first translated them into Eng
 To minimize potential oversight of relevant questions, I then conducted an additional search round using translated keywords within the original-language codebooks.
 The question numbers, corresponding response scales, and survey weights were recorded directly from the codebooks.
 Since there might be potential discrepancies between response scales listed in codebooks and those coded within datasets, I manually verified alignment between survey questions and their coded scales.
-After raw data collection, I followed a standard practice and excluded survey items that were asked in fewer than five country-years in countries surveyed at least twice, in order to improve comparability and reduce uncertainty from sparse data.
+The survey dataset codes was then further cleaned and prepared using the \texttt{DCPOtools} R package (Solt et al. 2019), where the scales that required reordering were adjusted to reflect increasing levels of attitudes.
+For example, scales such as ``a great deal of confidence (1), quite a lot of confidence (2), not very much confidence (3), or none at all (4)'' were reversed, ensuring that lower numbers always corresponded to lower levels of trust, and higher numbers corresponded to higher levels of trust.
 
-Compared to other survey questions on public gender egalitarianism and gay rights, data on political trust in government is relative rich in terms of covered countries and years.
+After collecting the raw data, I followed standard practice by excluding survey items that were rarely asked (Woo, Goldberg, and Solt 2023).
+In this study, I took a conservative approach to exclude rare survey items.
+Specifically, I excluded items that were asked in fewer than five country-years in countries surveyed at least three times, using a two-round checking process (Tai and Solt 2025).
+This step was taken to improve comparability and reduce uncertainty from sparse data.
+
+Compared to other important survey questions on public gender egalitarianism (Woo, Goldberg, and Solt 2023) and gay rights (Woo et al. Forthcoming), data on political trust in government is relative rich in terms of covered countries and years.
 In the country-years span, among the 2,674 country-years, 58\% of it has available information.
 However, if we have observations for every year in each country surveyed, the number would be 5,452, and a complete set of country-year-items would encompass 54,520 observations.
 In fact, even collecting as many available national and cross-national data as possible, the current source data has 1,555 country-years and a total of 2,136 country-year-item observations which are 29\% of a complete set of total country-year and 4\% of a complete set of country-year-items.
@@ -389,7 +395,7 @@ The current and future versions of the TGOV dataset offer invaluable opportuniti
 \section{Code Availability}\label{code-availability}
 
 The software tools used for data processing are described in the Methods and Technical Validation sections.
-The code used to generate the dataset and conduct validation test are openly available at:
+The code used to generate the dataset and conduct validation test are openly available at: \url{https://github.com/Tyhcass/TGOV}.
 
 \section*{References}\label{references}
 
@@ -515,11 +521,17 @@ Solt, Frederick. 2020a. {``{DCPO}: Dynamic Comparative Public Opinion.''} Availa
 \bibitem[\citeproctext]{ref-Solt2020c}
 ---------. 2020b. {``Modeling Dynamic Comparative Public Opinion.''} SocArXiv. \texttt{https://osf.io/\ preprints/socarxiv/d5n9p}.
 
+\bibitem[\citeproctext]{ref-Solt2019}
+Solt, Frederick, Yuehong Cassandra Tai, Yue Hu, Hyein Ko, and Byung-Deuk Woo. 2019. {``DCPOtools: Tools for Preparing Survey Data for DCPO.''}
+
 \bibitem[\citeproctext]{ref-Stoker2018}
 Stoker, Gerry, Mark Evans, and Max Halupka. 2018. {``Trust and Democracy in Australia: Democratic Decline and Renewal.''}
 
 \bibitem[\citeproctext]{ref-Tai2024}
 Tai, Yuehong Cassandra, Yue Hu, and Frederick Solt. 2024. {``Democracy, Public Support, and Measurement Uncertainty.''} \emph{American Political Science Review} 118 (1): 512--18.
+
+\bibitem[\citeproctext]{ref-Tai2025}
+Tai, Yuehong Cassandra, and Frederick Solt. 2025. {``Trust in Civil Servants: A Cross-National Dataset for Public Policy Research, 1986--2022.''}
 
 \bibitem[\citeproctext]{ref-Tang2016}
 Tang, Wenfang. 2016. \emph{Populist Authoritarianism: Chinese Political Culture and Regime Sustainability}. Oxford University Press.
@@ -535,6 +547,9 @@ Valgarsson, VO, G Stoker, D Devine, J Gaskell, and W Jennings. 2021. {``Disengag
 
 \bibitem[\citeproctext]{ref-Wilson2021}
 Wilson, Matthew Charles, and Carl Henrik Knutsen. 2022. {``Geographical Coverage in Political Science Research.''} \emph{Perspectives on Politics} 20 (3): 1024--39.
+
+\bibitem[\citeproctext]{ref-Woo2023}
+Woo, Byung-Deuk, Lindsey A Goldberg, and Frederick Solt. 2023. {``Public Gender Egalitarianism: A Dataset of Dynamic Comparative Public Opinion Toward Egalitarian Gender Roles in the Public Sphere.''} \emph{British Journal of Political Science} 53 (2): 766--75.
 
 \bibitem[\citeproctext]{ref-Woo2024}
 Woo, Byung-Deuk, Hyein Ko, Yuehong Cassandra Tai, Yue Hu, and Frederick Solt. Forthcoming. {``Public Support for Gay Rights Across Countries and over Time.''} \emph{Social Science Quarterly} Early View (Forthcoming).
