@@ -1,0 +1,1394 @@
+---
+output: 
+   bookdown::pdf_document2:
+    fig_caption: yes
+    keep_tex: yes
+    toc: no
+    number_sections: no
+    latex_engine: xelatex
+    pandoc_args: --lua-filter=multibib.lua
+title: "The TGOV Dataset: 
+   Comparative Estimates of Public Trust in Government 
+   Across 116 Countries, 1973–2020"
+#thanks: "Corresponding author: [xxxx@xxx.edu](mailto:xxx@xxx.edu).  Current version: `r format(Sys.time(), '%B %d, %Y')`."
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+editor_options: 
+  markdown: 
+    wrap: sentence
+tables: true # enable longtable and booktabs
+citation_package: natbib
+citeproc: false
+fontsize: 12pt
+indent: true
+linestretch: 1.5 # double spacing using linestretch 1.5
+bibliography:
+  text: trust-gov.bib
+#  app: 
+biblio-style: apsr
+citecolor: black
+linkcolor: black
+endnote: no
+header-includes:
+      - \usepackage{array}
+      - \usepackage{caption}
+      - \usepackage{graphicx}
+      - \usepackage{siunitx}
+      - \usepackage{colortbl}
+      - \usepackage{multirow}
+      - \usepackage{hhline}
+      - \usepackage{calc}
+      - \usepackage{tabularx}
+      - \usepackage{threeparttable}
+      - \usepackage{wrapfig}
+      - \usepackage{fullpage}
+      - \usepackage{lscape} #\usepackage{lscape} better for printing, page displayed vertically, content in landscape mode, \usepackage{pdflscape} better for screen, page displayed horizontally, content in landscape mode
+      - \newcommand{\blandscape}{\begin{landscape}}
+      - \newcommand{\elandscape}{\end{landscape}}
+      - \usepackage{titlesec}
+      - \titleformat*{\section}{\normalsize\bfseries}
+      - \titleformat*{\subsection}{\normalsize\itshape}
+      - \usepackage{titling} #use \maketitle repeatedly  
+---
+
+\pagenumbering{gobble}
+
+# Authors {.unnumbered}
+
+- Yuehong Cassandra Tai, ORCID: <https://orcid.org/0000-0001-7303-7443>, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, [yhcasstai\@psu.edu](mailto:yhcasstai@psu.edu){.email}
+
+
+\pagebreak
+
+```{=tex}
+\renewcommand{\baselinestretch}{1}
+\selectfont
+\maketitle
+\renewcommand{\baselinestretch}{1.5}
+\selectfont
+```
+
+```{=tex}
+\begin{abstract}
+Political trust plays a critical role in understanding key political questions, including regime support, democratic legitimacy, policy preferences, and political behavior. However, the lack of comparable, cross-national data has limited scholars' ability to analyze the relationship of political trust with quantities of interest and to generalize findings across different countries and time periods. To address this gap, this paper introduces the Trust in Government (TGOV) Dataset, a time-series cross-sectional resource covering 116 countries from 1973 to 2020. Built using a Bayesian latent variable model, TGOV harmonizes 1,555 country-year observations from 189 national and cross-national surveys, providing mean estimates of trust in government alongside full posterior distributions to account for measurement uncertainty. The TGOV dataset enables scholars to analyze trust’s dynamic relationships with institutional performance, policy outcomes, and crisis resilience across political systems. More broadly, it supports interdisciplinary research on governance, inequality, state-society relations, public health compliance, climate policy acceptance, and digital governance innovations.
+
+\end{abstract}
+
+Keywords: trust in government, latent variable model, election
+```
+\pagebreak
+
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  cache = TRUE,
+  dpi = 600,
+  fig.width=7,
+  fig.height = 2.5,
+  plot = function(x, options)  {
+    hook_plot_tex(x, options)
+  }
+)
+
+if (!require(pacman))
+    install.packages("pacman")
+library(pacman)
+#p_install(janitor, force = FALSE)
+#remotes::install_github("fsolt/gesisdata")
+#remotes::install_github("fsolt/DCPOtools")
+##install.packages('wbstats')
+#remotes::install_github("stan-dev/cmdstanr")
+
+p_load(
+  DCPOtools,
+  DCPO,
+  cmdstanr,
+  tidyverse,
+  here,
+  maps,
+  countrycode,
+  wbstats, 
+  tidybayes,
+  scales,
+  patchwork,
+  ggthemes,
+  rsdmx,
+  readxl,
+  osfr,
+  kableExtra,
+  bayesplot,
+  stringr,
+  kableExtra
+) 
+
+set.seed(313)
+
+```
+
+\pagenumbering{arabic}
+```{r define_funs}
+# define functions
+round_up <- function(x) floor(x + 0.5)
+validation_plot <- function(v_data_raw,
+                            lab_x = .38, lab_y = 92,
+                            theta_summary, theta_results) {
+    
+    # defaults per https://stackoverflow.com/a/49167744/2620381
+    if ("theta_summary" %in% ls(envir = .GlobalEnv) & missing(theta_summary))
+        theta_summary <- get("theta_summary", envir = .GlobalEnv)
+    if ("theta_results" %in% ls(envir = .GlobalEnv) & missing(theta_results))
+        theta_results <- get("theta_results", envir = .GlobalEnv)
+  
+
+    median_val <- Vectorize(function(x) median(1:x),
+                            vectorize.args = "x")
+    
+    v_vars <- v_data_raw %>% 
+      select(item0 = item,
+             title = title) %>% 
+      distinct() %>% 
+      mutate(v_val = str_extract(item0, "\\d+") %>% 
+               as.numeric() %>% 
+               median_val(.) %>%
+               { . + 0.6 } %>% 
+               round_up())
+    
+    validation_summarized <- v_data_raw %>% 
+      DCPOtools::format_dcpo(scale_q = v_vars$item0[[1]], # these arguments are required
+                             scale_cp = 1) %>% # but they don't matter
+      pluck("data") %>% 
+      mutate(item0 = str_remove(item, " \\d or higher")) %>% 
+      right_join(v_vars, by = "item0") %>%
+      arrange(title) %>% 
+      mutate(title = factor(title, 
+                            levels = v_data_raw %>%
+                              pull(title) %>%
+                              unique())) %>% 
+      filter(str_detect(item, paste(v_val, "or higher"))) %>%
+      mutate(iso2c = countrycode::countrycode(country,
+                                              origin = "country.name",
+                                              destination = "iso2c",
+                                              warn = FALSE),
+             prop = y_r/n_r,
+             se = sqrt((prop*(1-prop))/n),
+             prop_90 = prop + qnorm(.9)*se,
+             prop_10 = prop - qnorm(.9)*se) %>%
+      inner_join(theta_summary %>% select(-kk, -tt), by = c("country", "year"))
+    
+    validation_cor <- theta_results %>%
+      inner_join(validation_summarized %>%
+                   select(country, year, title, prop, se),
+                 by = c("country", "year")) %>% 
+      rowwise() %>% 
+      mutate(sim = rnorm(1, mean = prop, sd = se)) %>% 
+      ungroup() %>% 
+      select(title, theta, sim, draw) %>% 
+      nest(data = c(theta, sim)) %>% 
+      mutate(r = lapply(data, function(df) cor(df)[2,1]) %>% 
+               unlist()) %>%
+      select(-data) %>% 
+      group_by(title) %>% 
+      summarize(r = paste("R =", round(mean(r), 2)))
+
+    if ({validation_summarized %>%
+        pull(country) %>%
+        unique() %>% 
+        length()} > 1) {
+      val_plot <- validation_summarized %>%
+        ggplot(aes(x = mean,
+                   y = prop * 100)) +
+        geom_segment(aes(x = q10, xend = q90,
+                         y = prop * 100, yend = prop * 100),
+                     na.rm = TRUE,
+                     alpha = .2) +
+        geom_segment(aes(x = mean, xend = mean,
+                         y = prop_90 * 100, yend = prop_10 * 100),
+                     na.rm = TRUE,
+                     alpha = .2) +
+        geom_smooth(method = 'lm', formula = 'y ~ x', se = FALSE) +
+        facet_wrap(~ title, ncol = 4) +
+        geom_label(data = validation_cor, aes(x = lab_x,
+                                              y = lab_y,
+                                              label = r),
+                   size = 2.5)
+    } else {
+      val_plot <- validation_summarized %>%
+        ggplot(aes(x = year,
+                   y = mean)) +
+        geom_line() +
+        geom_ribbon(aes(ymin = q10,
+                        ymax = q90,
+                        linetype = NA),
+                    alpha = .2) +
+        geom_point(aes(y = prop),
+                   fill = "black",
+                   shape = 21,
+                   size = .5,
+                   na.rm = TRUE) +
+        geom_path(aes(y = prop),
+                  linetype = 3,
+                  na.rm = TRUE,
+                  alpha = .7) +
+        geom_segment(aes(x = year, xend = year,
+                         y = prop_90, yend = prop_10),
+                     na.rm = TRUE,
+                     alpha = .2) +
+        facet_wrap(~ title, ncol = 4) +
+        geom_label(data = validation_cor, aes(x = lab_x,
+                                              y = lab_y,
+                                              label = r),
+                   size = 2.5)
+    }
+    
+    return(val_plot)
+}
+
+covered_share_of_spanned <- function(dcpo_input_raw) {
+  n_cy <- dcpo_input_raw %>%
+    distinct(country, year) %>% 
+    nrow()
+  
+  spanned_cy <- dcpo_input_raw %>% 
+    group_by(country) %>% 
+    summarize(years = max(year) - min(year) + 1) %>% 
+    summarize(n = sum(years)) %>% 
+    pull(n)
+  
+  {(n_cy/spanned_cy) * 100}
+}
+
+
+```
+
+```{r dcpo_input_raw, include=FALSE, eval=FALSE}
+surveys_tb <- read_csv(here::here("rawdata",
+                                  "trust_gov_survey.csv"),
+                       col_types = "cccccc")
+
+dcpo_input_raw_gov <- DCPOtools::dcpo_setup(vars = surveys_tb,
+                                         datapath = here("..",
+                                                         "data",
+                                                         "dcpo_surveys"),
+                                         file = here("data",
+                                                     "dcpo_input_raw_gov.csv"))
+```
+
+```{r tgov_summary_stats}
+
+
+surveys <-  read_csv(here::here("rawdata/trust_gov_survey.csv"),
+                    col_types = "ccccccc") 
+
+dcpo_input_raw_gov <- read_csv(here::here("data","dcpo_input_raw_gov.csv") )
+
+with_min_coverage <- function(x, min_cov) {
+  if (!is.na(min_cov)) {
+    country <- year <- years <- spanned <- coverage <- NULL
+    x <- x %>%
+      group_by(country) %>%
+      mutate(years = length(unique(year)),
+             spanned = length(min(year):max(year)),
+             coverage = years/spanned) %>%
+      filter(coverage >= min_cov) %>%
+      select(-years, -spanned, -coverage) %>%
+      ungroup()
+  }
+  return(x)
+}
+with_max_gap <- function(x, max_gap, edges = TRUE) {
+    if (!is.na(max_gap)) {
+        country <- yr_obs <- NULL
+        c_yrs <- x %>% 
+            group_by(country, year) %>% 
+            summarize(year = first(year)) %>% 
+            mutate(lead_span = ifelse(!is.na(lead(year)),
+                                      lead(year) - year - 1,
+                                      50),
+                   lag_span = ifelse(!is.na(lag(year)),
+                                     year - lag(year) - 1,
+                                     50),
+                   min_span = pmin(lead_span, lag_span),
+                   max_span = pmax(lead_span, lag_span),
+                   drop = min_span > max_gap & max_span == 50)
+        
+        x <- x %>% 
+          left_join(c_yrs,
+                    by = c("country", "year")) %>% 
+          filter(!drop) %>% 
+          select(-contains("span")) %>% 
+          select(-drop)
+    }
+    return(x)
+}
+
+process_dcpo_input_raw <- function(dcpo_input_raw_df) {
+  dcpo_input_raw_df %>% 
+    with_min_yrs(3) %>% 
+    with_min_cy(5) %>% 
+    with_min_yrs(3) %>% # double-check after dropping <5 cy
+    filter(year >= 1972 & n > 0) %>% 
+    group_by(country) %>% 
+    mutate(cc_rank = n()) %>% 
+    ungroup() %>% 
+    arrange(-cc_rank)
+}
+
+
+dcpo_input_raw_gov <- process_dcpo_input_raw(dcpo_input_raw_gov)
+
+
+n_surveys <- surveys %>%
+  distinct(survey) %>% 
+  nrow()  #189
+
+n_items <- dcpo_input_raw_gov %>%
+  distinct(item) %>% 
+  nrow() #10 items
+
+n_countries <- dcpo_input_raw_gov %>%
+  distinct(country) %>% 
+  nrow()  #116
+
+n_cy <- dcpo_input_raw_gov %>%
+  distinct(country, year) %>% 
+  nrow() %>% 
+  scales::comma() #1,555 country year
+
+n_years <- as.integer(summary(dcpo_input_raw_gov$year)[6]-summary(dcpo_input_raw_gov$year)[1]) #21 years
+
+spanned_cy <- dcpo_input_raw_gov %>% 
+  group_by(country) %>% 
+  summarize(years = max(year) - min(year) + 1) %>% 
+  summarize(n = sum(years)) %>% 
+  pull(n) %>% 
+  scales::comma() #2674
+
+total_cy <- {n_countries * n_years} %>% 
+  scales::comma()  #5452
+
+year_range <- paste("from",
+                    summary(dcpo_input_raw_gov$year)[1], #1973
+                    "to",
+                    summary(dcpo_input_raw_gov$year)[6]) #2020
+n_cyi <- dcpo_input_raw_gov %>% 
+  distinct(country, year, item) %>% 
+  nrow() %>% 
+  scales::comma() #2,136
+back_to_numeric <- function(string_number) {
+  string_number %>% 
+    str_replace(",", "") %>% 
+    as.numeric()
+}
+
+```
+
+
+
+# Background & Summary
+
+Trust is critical for understanding key political, societal, and economic issues, including but not limited to regime support, democratic legitimacy, and public confidence in elections [@Easton1975; @Norris2002; @Wuttke2020;@Kerr2024]; civic duty, participation, and law compliance [@Valgardhsson2021; @Hooghe2013; @oksanen2020regulation; @letki2006investigating; @tyler1990justice]; government performance, policy preferences, and inequality [@Rose2010; @Goubin2020; @Rudolph2005; @hetherington2005trust]; as well as broader outcomes such as public health responses to crises like the COVID-19 pandemic [@Zaki2022;@Devine2021trust].
+
+Regardless of universal exist of political trust and these issues across different regimes [@Tang2016], a significant challenge for scholars examining these issues or testing theories generally is the limited availability of comprehensive comparative data on trust in government across countries and over time.
+Existing datasets often suffer from fragmented coverage, restricting researchers' ability to rigorously compare trust dynamics across diverse political and regional contexts [@Devine2024; @Kerr2024].
+Most of these studies focus on a single country, dominated by studies in the U.S. and U.K. and even when comparative research was studied, most of them focused on certain region or democratic countries, such European countries [@Devine2024], although social and political trust is not exclusive to democracies.
+The lack of time-series comparative trust data makes it impossible to examine the theories about the relationship between temporal changes of trust and other quantities of interest, most of which have temporal features. Scholars have to choose between more countries at a snapshot time or fewer countries involved in longitudinal data. 
+It turns out that comparative surveys usually incorporate more countries rather than more time points, which result in more differences between countries than differences over time [@Kolczynska2020].
+
+To address this critical gap, I introduce a time-series cross-national dataset measuring public trust in national governments (TGOV), covering 116 countries from 1973 to 2020.
+Using a sophisticated Bayesian latent variable model developed by @Solt2020c, this dataset synthesizes various survey sources into robust, comparable trust estimates, drawn from `r n_surveys` with `r n_cyi` country-year-item covering `r n_years`.
+In addition to providing mean estimates of trust, the dataset includes full posterior samples, enabling scholars to explicitly incorporate the measurement uncertainty inherent in latent variable models.
+By offering temporal and cross-national coverage, the TGOV dataset facilitates comparative research on the causes and consequences of political trust, enhancing our understanding of democratic governance, electoral behavior, policy development, and related areas.
+
+In the following sections, I first describe the source data and collection process, explain the methodology used to estimate public trust in government, and introduce the TGOV dataset.
+I then validate TGOV scores through internal and external convergent validation tests using individual trust items—such as trust in government, parliament, elections, and public administration—as well as construct validation tests using perceptions of corruption, satisfaction with political system performance, and executive approval ratings. 
+Finally, I discuss the importance of incorporating measurement uncertainty when using this dataset, provide practical approaches for doing so, and outline plans for expanding and maintaining the TGOV dataset.
+
+# Methods
+
+```{r itemcountryplots, fig.height = 4, fig.cap = "Countries and Years with the Most Observations in the Source Data of Trust in Government \\label{tgov_item_country_plots}",cache=FALSE}
+
+
+countries_plot <- dcpo_input_raw_gov %>%
+  mutate(country = if_else(stringr::str_detect(country, "United"),
+                           stringr::str_replace(country, "((.).*) ((.).*)", "\\2.\\4."),
+                           country)) %>% 
+  distinct(country, year, item) %>% 
+  count(country) %>%
+  arrange(desc(n)) %>% 
+  head(15) %>% 
+  ggplot(aes(forcats::fct_reorder(country, n, .desc = TRUE), n)) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x  = element_text(angle = 90, vjust = .45, hjust = .95, size = 7),
+        axis.title.y = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11)) +
+  ylab("Year-Items\nObserved") +
+  ggtitle("Countries")
+
+
+cby_plot <- dcpo_input_raw_gov %>%
+  mutate(country = if_else(stringr::str_detect(country, "United"),
+                           stringr::str_replace(country, "((.).*) ((.).*)", "\\2.\\4."),
+                           country),
+         country = stringr::str_replace(country, "South", "S.")) %>% 
+  distinct(country, year) %>%
+  count(country) %>% 
+  arrange(desc(n)) %>% 
+  head(15) %>% 
+  ggplot(aes(forcats::fct_reorder(country, n, .desc = TRUE), n)) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x  = element_text(angle = 90, vjust = .45, hjust = .95, size = 7),
+        axis.title.y = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11)) +
+  ylab("Years\nObserved") +
+  ggtitle("Countries")
+
+ybc_plot <- dcpo_input_raw_gov %>%
+  distinct(country, year) %>%
+  count(year, name = "nn") %>%
+  ggplot(aes(year, nn)) +
+  geom_bar(stat = "identity") +
+   scale_x_continuous(
+    minor_breaks = seq(1972, 2022, by = 1),
+    breaks = seq(1972, 2022, by = 2), limits = c(1972, 2022))  +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+         axis.text.x  = element_text(angle = 90, vjust = .45, hjust = .95,size = 5),
+        axis.title.y = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11)) +
+  xlab("Year") +
+  ylab("Countries\nObserved") +
+  ggtitle("Year")
+
+world_map <- map_data("world") %>% 
+  filter(!long > 180)
+
+cby_map <- world_map %>% 
+  distinct(region) %>% 
+  mutate(country = countrycode::countrycode(region,
+                                            "country.name",
+                                            "country.name")) %>% 
+  filter(!region=="Antarctica") %>% 
+  left_join(dcpo_input_raw_gov %>% 
+              count(country, year) %>% 
+              count(country, name = "Years"),
+            by = "country") %>% 
+  mutate(Years = ifelse(is.na(Years), 0, Years)) %>% 
+  ggplot(aes(fill = Years, map_id = region)) +
+  geom_map(map = world_map,
+           color = "white",
+           linewidth = 0.06) +
+  coord_map(projection = "mollweide", 
+            ylim=c(-80, 90),
+            xlim=c(-170, 170)) +
+  theme_void() +
+  scale_fill_distiller(na.value = "gray90", 
+                       palette = "Blues",
+                       direction = 1) +
+  ggtitle("Years Observed by Country") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = c(.05,.1),
+        legend.justification = c(0,0), 
+        legend.direction = "vertical") +
+  scale_y_continuous(expand=c(0,0)) +
+scale_x_continuous(expand=c(0,0))
+
+items_plot <- dcpo_input_raw_gov %>%
+  distinct(country, year, item) %>%
+  count(item) %>%
+  arrange(desc(n)) %>% 
+  head(15) %>% 
+  ggplot(aes(forcats::fct_reorder(item, n, .desc = TRUE), n)) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x  = element_text(angle = 90, vjust = .45, hjust = .95),
+        axis.title.y = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11)) +
+  ylab("Country-Years\nObserved") +
+  ggtitle("Items")
+
+
+
+most_common_item <- dcpo_input_raw_gov %>% 
+  count(item) %>% 
+  arrange(-n) %>% 
+  slice_head() %>% 
+  pull(item) #
+
+un_cy <- dcpo_input_raw_gov %>% filter(item == most_common_item ) %>% distinct(country, year) %>% nrow() #816
+
+un_surveys <- dcpo_input_raw_gov %>% filter(item == most_common_item) %>% distinct(survey) %>% pull(survey) #75
+
+#sum(stringr::str_detect(un_surveys, ",")) 
+
+unique_survey <- length(unique(unlist(strsplit(un_surveys, ", ", fixed = TRUE)))) #47
+
+most_common_item_cy <- dcpo_input_raw_gov %>% 
+  filter(item == most_common_item) %>%
+  distinct(country, year) %>%
+  nrow()  #816
+
+most_common_item_surveys <- dcpo_input_raw_gov %>%
+  filter(item == most_common_item) %>%
+  distinct(survey) %>%
+  pull(survey) %>% 
+  str_split(", ") %>% 
+  unlist() %>% 
+  unique() %>% 
+  sort()
+
+top_country_cyi <- dcpo_input_raw_gov %>% 
+  distinct(country, year, item) %>%
+  count(country) %>%
+  arrange(-n) %>% 
+  slice_head() %>%
+ pull(country) #Germany
+
+top_country_cyi_obs <- dcpo_input_raw_gov %>%
+  filter(country == top_country_cyi) %>%
+  distinct(country, year, item) %>%
+  nrow()  #31
+
+others_gov <- dcpo_input_raw_gov %>%
+  distinct(country, year, item) %>%
+  count(country) %>%
+  arrange(desc(n)) %>%
+  slice(2:5) %>%
+  pull(country) %>% 
+  paste(collapse = ", ") %>% 
+  str_replace(", (\\w+)$", ", and \\1") # "El Salvador, Guatemala, Nicaragua, and Ecuador"
+
+countries_cp <- dcpo_input_raw_gov %>%
+  mutate(country = if_else(stringr::str_detect(country, "United"),
+                           stringr::str_replace(country, "((.).*) ((.).*)", "\\2.\\4."),
+                           country),
+         country = stringr::str_replace(country, "South", "S.")) %>% 
+  distinct(country, year, item) %>%
+  count(country) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  pull(country)
+
+countries_cbyp <- dcpo_input_raw_gov %>%
+  mutate(country = if_else(stringr::str_detect(country, "United"),
+                           stringr::str_replace(country, "((.).*) ((.).*)", "\\2.\\4."),
+                           country),
+         country = stringr::str_replace(country, "South", "S.")) %>% 
+  distinct(country, year) %>%
+  count(country) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  pull(country)
+
+adding_gov <- setdiff(countries_cbyp, countries_cp) %>% 
+  paste(collapse = ", ") %>% 
+  str_replace(", (\\w*)$", ", and \\1")  #""
+
+dropping_gov <- setdiff(countries_cp, countries_cbyp) %>% 
+  paste(collapse = ", ") %>% 
+  str_replace(", (\\w*)$", ", and \\1")  ##""
+
+y_gov_peak_year <- dcpo_input_raw_gov %>%
+  distinct(country, year) %>%
+  count(year, name = "nn") %>% 
+  filter(nn == max(nn)) %>% 
+  pull(year) #2018
+
+y_gov_peak_nn <- dcpo_input_raw_gov %>%
+  distinct(country, year) %>%
+  count(year, name = "nn") %>% 
+  filter(nn == max(nn)) %>% 
+  pull(nn) #84 countries
+
+data_gov_poorest <- dcpo_input_raw_gov %>%
+  distinct(country, year, item) %>%
+  count(country) %>%
+  arrange(n) %>%
+  filter(n == min(n)) %>%
+  pull(country) %>% 
+  paste(collapse = ", ") %>% 
+  str_replace(", (\\w+)$", ", and \\1")  #Algeria, and Libya
+
+wordify_numeral <- function(x) setNames(c("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", " seventeen", "eighteen", "nineteen"), 1:19)[x]
+
+
+
+n_gov_data_poorest <- {data_gov_poorest %>%
+    str_split(",") %>% 
+    first()} %>% 
+  length() %>% 
+  wordify_numeral()
+
+
+cby_map + (countries_plot/ybc_plot) + plot_layout(widths = c(3.5, 1.5))
+
+```
+
+## Input Data
+
+Although many national and cross-national surveys have asked questions on trust toward national government, comparative data at the aggregate level is sparse and fragmented.
+This fragmentation is primarily due to limited data availability across countries and years, as well as inconsistencies in question wording and interpretation.
+
+To construct a dynamic and comparable trust in government dataset, I systematically reviewed `r n_surveys` unique survey projects spanning `r n_countries` countries over `r n_years` year.
+Most of these surveys, including both data and codebooks, are publicly accessible for direct download or available upon request.
+To identify relevant survey questions capturing public attitudes toward national governments, I searched codebooks using keywords such as "trust," "confidence," and "(national) government," identifying `r n_items` unique survey questions that captured public attitudes toward trust in national governments.
+For surveys without English-language codebooks, I first translated them into English using Google Translate to facilitate keyword searches.
+To minimize potential oversight of relevant questions, I then conducted an additional search round using translated keywords within the original-language codebooks. 
+The question numbers, corresponding response scales, and survey weights were recorded directly from the codebooks.
+Since there might be potential discrepancies between response scales listed in codebooks and those coded within datasets, I manually verified alignment between survey questions and their coded scales.
+ After raw data collection, I followed a standard practice and excluded survey items that were asked in fewer than five country-years in countries surveyed at least twice, in order to improve comparability and reduce uncertainty from sparse data. 
+
+Compared to other survey questions on public gender egalitarianism and gay rights, data on political trust in government is relative rich in terms of covered countries and years. 
+In the country-years span, among the `r spanned_cy` country-years, `r {back_to_numeric(n_cy)/back_to_numeric(spanned_cy) * 100} %>% round()`% of it has available information.
+However, if we have observations for every year in each country surveyed, the number would be `r total_cy`, and a complete set of country-year-items would encompass `r {n_countries * n_years * n_items} %>% scales::comma()` observations. 
+In fact, even collecting as many available national and cross-national data as possible, the current source data has `r n_cy` country-years and a total of `r n_cyi` country-year-item observations which are `r {back_to_numeric(n_cy)/back_to_numeric(total_cy) * 100} %>% round()`% of a complete set of total country-year and `r {back_to_numeric(n_cyi)/(n_countries * n_years * n_items) * 100} %>% round()`% of a complete set of country-year-items.
+
+Consider the most frequently asked item in the data we collected, which asks respondents "How Much Trust in Government".
+Employed by `r unique_survey` surveys, this question "Could you tell me how much confidence you have in national government: is it a great deal of confidence, quite a lot of confidence, not very much confidence or none at all? (WVS)"^[There are many different versions of this questions. For example, "please tell me how much trust you have in government. Is it a great deal of trust, quite a lot of trust, not very much trust, or none at all?(Arab Barometer) ] was asked in a total of `r most_common_item_cy` different country-years.
+However, even this frequently asked item constitutes only `r {most_common_item_cy*100/(spanned_cy %>% str_replace(",", "") %>% as.numeric())} %>% round()`% of the total country-years spanned by the collected data.
+
+
+The left panel of Figure \nobreakspace{}\ref{tgov_item_country_plots} maps the global distribution of observed country-years.
+European and Latin American countries exhibit longer time series data, reflecting the frequent administration of Eurobarometer and AmericasBarometer surveys, as well as scholarly interest in political trust within democratic contexts and emerging democracies.
+By contrast, data from Asian and African countries is limited. 
+The upper right panel further illustrates this geographical disparity: Germany, with 54 country-year-item observations, is the most represented country, followed by `r others_gov %>% str_replace("United", "the United")`.
+The lower right panel counts the countries observed in each year and reveals how few relevant survey items were asked before 1990.
+Country coverage reached its peak in `r y_gov_peak_year`, when respondents in `r y_gov_peak_nn` countries were asked items about trust in government.
+In general, although questions on trust in government appeared as early as 1970s, trust questions were not surveyed steadily and broadly until the 1990s, with geographic disparity. 
+
+In the next section, I describe how I leveraged this sparse and incomparable survey data to generate complete, comparable time-series TGOV scores using a latent variable model.
+
+
+## Measurements
+Latent variable measurement assumes the concept of interest is not directly observable but can be inferred from individuals' responses to relevant questions.
+Recently, pioneering studies have developed latent-variable models specifically tailored to cross-national survey data [see @Claassen2019; @Caughey2019; @McGann2019; @Kolczynska2020].
+In this paper, I adopt the Dynamic Comparative Public Opinion (DCPO) model developed by @Solt2020c, which is particularly suitable for handling sparse and incomparable data.
+The DCPO model not only provides a better fit to survey data compared to alternative models proposed by @Claassen2019 and @Caughey2019 [@Solt2020c], but it also effectively manages data sparsity, unlike other models that require dense survey coverage or additional population characteristics [@McGann2019; @Kolczynska2020].
+
+As a population-level two-parameter ordinal logistic item response theory (IRT) model with country-specific item-bias terms, the DCPO model can address the two principal challenges posed by our source data: incomparability and sparsity.
+
+To tackle the incomparability of different survey questions, the DCPO model includes two parameters:
+First, the _difficulty_ parameter captures how much trust is required to respond affirmatively to each survey question. 
+For example, "a great deal" trust toward national government reflects more trust in national government than "somewhat" trust in the question of "Could you tell me how much trust you have in national government. Is it a great deal of trust, some trust, not very much trust or none at all?"
+Similarly, across questions, expressing "a lot" of trust in answering "How much do you trust the national government to do what is right for (survey country) — a lot, somewhat, not much, or not at all?" from Pew Global Attitudes & Trends likely indicates even higher trust levels than merely responding "tend to trust" in question that "Please tell me if you tend to trust it or tend not to trust the government" from Eurobarometer.
+
+Second, the _dispersion_ parameter indicates how sensitively survey responses reflect changes in the latent trust variable. 
+In other words, a lower dispersion score means that a small change in responses corresponds closely to a substantial shift in the latent trust level.
+Together, the difficulty and dispersion parameters allow the generation of comparable trust estimates across different surveys and questions.
+
+To address data sparsity, the DCPO model adopts random-walk priors for each country. 
+Within each country, the model estimates missing latent values by modeling them as the previous year’s estimate plus a random shock. 
+Consequently, trust estimates are smoothed over time, allowing for estimation even in years with limited or no available data, although these estimates come with greater measurement uncertainty.
+For more detailed information about the DCPO model, see @Solt2020c [, 3–8].
+
+
+```{r dcpo_input, eval=FALSE, include=FALSE, results=FALSE}
+
+dcpo_input <- DCPOtools::format_dcpo(dcpo_input_raw_gov,
+                                     scale_q = "PT_natgov_4",
+                                     scale_cp = 2)
+
+save(dcpo_input, file = here::here("data", "dcpo_input.rda"))
+```
+
+```{r dcpo, eval=FALSE, include=FALSE, results=FALSE}
+iter <- 2000
+ 
+dcpo <- paste0(.libPaths(), "/DCPO/stan/dcpo.stan")[1] |> 
+  cmdstan_model()
+
+dcpo_output <- dcpo$sample(
+  data = dcpo_input[1:13], 
+  max_treedepth = 14,
+  adapt_delta = 0.99,
+  step_size = 0.005,
+  seed = 324, 
+  chains = 4, 
+  parallel_chains = 4,
+  iter_warmup = iter/2,
+  iter_sampling = iter/2,
+  refresh = iter/50
+)
+
+results_path <- here::here(file.path("data", 
+                                     iter, 
+                                  {str_replace_all(Sys.time(),
+                                                      "[- :]",
+                                                   "") %>%
+                                         str_replace("\\d{2}.\\d{6}$",
+                                                     "")}))
+
+dir.create(results_path, 
+           showWarnings = FALSE, 
+           recursive = TRUE)
+
+dcpo_output$save_data_file(dir = results_path,
+                           random = FALSE)
+dcpo_output$save_output_files(dir = results_path,
+                              random = FALSE)
+```
+
+
+```{r dcpo_results,eval=FALSE, include=FALSE, results=FALSE}
+ if (!exists("results_path")) {
+   latest <- "20250312060547.660"
+   results_path <- here::here("data", "2000", latest)
+   
+   # Define OSF_PAT in .Renviron: https://docs.ropensci.org/osfr/articles/auth
+   if (!file.exists(file.path(results_path, paste0("dcpo-", latest, "-1.csv")))) {
+     dir.create(results_path, showWarnings = FALSE, recursive = TRUE)
+     osf_retrieve_node("qr6ca") %>% 
+       osf_ls_files() %>% 
+       filter(str_detect(name, latest)) %>% 
+       osf_download(path = results_path)
+   }
+}
+ 
+dcpo_output <- as_cmdstan_fit(here::here(results_path,
+                                   list.files(results_path,
+                                              pattern="csv$")))
+
+```
+
+```{r dcpo_summary}
+#load(file = here::here("data", "dcpo_input.rda"))
+
+#dcpo_output <- readRDS(here::here("data","dcpo_output.rds")
+#theta_summary <- DCPOtools::summarize_dcpo_results(dcpo_input,
+#                                                   dcpo_output,
+#                                                   "theta")
+#
+
+#save(theta_summary, file = here::here("data",
+#                                      "theta_summary.rda"))
+
+load(file = here::here("data", "theta_summary.rda"))
+
+
+```
+
+```{r theta_results}
+
+#theta_results <- extract_dcpo_results(dcpo_input,
+#                                      dcpo_output,
+#                                      par = "theta")
+load(file = here::here("data", "theta_results.rda"))
+theta_results_list <- theta_results %>%
+  nest(data = c(country, year,theta))  
+
+
+res_cy <- nrow(theta_summary) %>% 
+  scales::comma()
+
+res_c <- theta_summary %>% 
+  pull(country) %>% 
+  unique() %>% 
+  length()
+
+
+
+
+```
+
+Trust in government is estimated in DCPO model through the `DCPO` package for R [@Solt2020a], using four chains for 2000 iterations each with burn-in of 1000, keeping 1000 samples from each chain and resulting in a total of 4000 samples.
+The $\hat{R}$ diagnostic had a mean value of 1.001 and maximum value of 1.01, indicating that the model converged.
+The dispersion parameters of the survey items indicate that all of our source data items load well on the latent variable  (see Appendix A).
+
+The estimates in all `r res_cy` country-years spanned by the source data is the TGOV scores.
+
+# Data Records
+
+I provide both mean measures of trust in government (theta_summary) and the entire results (theta_results) to facilitate downstream analysis.
+The data is accessible at OSF https://osf.io/qr6ca/files/osfstorage.
+
+## Estimating Trust in Government
+
+
+```{r cs, fig.cap="TGOV Scores, Most Recent Available Year \\label{cs_mry}", fig.height=10, fig.width=8}
+n_panes <- 2
+axis_text_size <- 10
+
+p1_data <- theta_summary %>%
+  group_by(country) %>%
+  top_n(1, year) %>%
+  ungroup() %>%
+  arrange(mean) %>%
+  transmute(country_year = paste0(country, " (", year, ")") %>% 
+              str_replace("’", "'"),
+            estimate = mean,
+            conf.high = q90,
+            conf.low = q10,
+            pane = n_panes - (ntile(mean, n_panes) - 1),
+            ranked = as.factor(ceiling(row_number())))
+
+p_theta <- ggplot(p1_data,
+                  aes(x = estimate, y = ranked)) +
+  geom_segment(aes(x = conf.low, xend = conf.high,
+                   y = ranked, yend = ranked),
+               na.rm = TRUE,
+               alpha = .4) +
+  geom_point(fill = "black", shape = 21, size = .5, na.rm = TRUE) +
+  theme_bw() + theme(legend.position="none",
+                     axis.text.x  = element_text(size = axis_text_size,
+                                                 angle = 90,
+                                                 vjust = .45,
+                                                 hjust = .95),
+                     axis.text.y  = element_text(size = axis_text_size),
+                     axis.title = element_blank(),
+                     strip.background = element_blank(), 
+                     strip.text = element_blank(),
+                     panel.grid.major = element_line(size = .3),
+                     panel.grid.minor = element_line(size = .15)) +
+  scale_y_discrete(breaks = p1_data$ranked, labels=p1_data$country_year) +
+  coord_cartesian(xlim=c(0, 1)) +
+  facet_wrap(vars(pane), scales = "free", nrow = 1)
+
+
+p_theta +
+  plot_annotation(caption = "Note: Gray whiskers represent 80% credible intervals.")
+
+bottom5 <- p1_data %>% 
+  arrange(ranked) %>% 
+  slice(1:5) %>% 
+  pull(country_year) %>% 
+  str_replace(" \\(.*", "") %>% 
+  knitr::combine_words()
+
+```
+
+
+Figure\nobreakspace{}\ref{cs_mry} displays the most recent available TGOV score for each of the `r res_c` countries and territories in the dataset. 
+China and several Central Asian countries dominate the top positions, aligning with previous research indicating high levels of trust in these governments [@Schneider2017;@Paturyan2024, @Byaro2020].
+Although respondents' understanding about political trust may differ across regime types, prior research has shown that trust in central political institutions can be comparably measured using latent variable models [@Schneider2017].
+The least corrupt counties, like Denmark, Switzerland, Finland, and Norway, also rank highly. 
+On the other hand, the latest scores for `r bottom5` have them as the places where the public has the lowest trust in government.
+These lower-ranked countries typically faced serious challenges around the years of the most recent available data, such as severe corruption (e.g., Venezuela and Iraq), election-related political violence (e.g., Brazil), or security threats and conflict (e.g., Tunisia and Libya).
+
+```{r ts, fig.cap="TCS Scores Over Time Within Selected Countries \\label{ts_plots}", fig.height=3.5,fig.width = 7}
+
+countries <- c("Germany","United States","United Kingdom",
+                "Greece", "Turkey","Australia",
+               "China",  "India", "Philippines", 
+                "Nigeria", "Argentina", "Mexico"
+)
+
+
+
+
+countries2 <- countries %>% 
+  str_replace("United States", "U.S.") %>% 
+  str_replace("United Kingdom", "U.K.")
+
+c_res <- theta_summary %>% 
+  filter(country %in% countries) %>%
+  mutate(country = str_replace(country, "United States", "U.S.") %>% 
+           str_replace("United Kingdom", "U.K.") %>% 
+           factor(levels = countries2))
+
+ggplot(data = c_res, aes(x = year, y = mean)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  coord_cartesian(xlim = c(1972, 2025), ylim = c(0, 1)) +
+  labs(x = NULL, y = "TGOV Scores") +
+  geom_ribbon(data = c_res, aes(ymin = q10, ymax = q90, linetype=NA), alpha = .25) +
+  geom_line(data = c_res) +
+  facet_wrap(~country, nrow = 2) +
+  theme(axis.text.x  = element_text(size=7,
+                                    angle = 90,
+                                    vjust = .45,
+                                    hjust = .95),
+        strip.background = element_rect(fill = "white", colour = "white")) +
+  patchwork::plot_annotation(caption = "Note: Countries are ordered by their TGOV scores in their most recent\navailable year; gray shading represents 80% credible intervals.")
+```
+
+
+Figure\nobreakspace{}\ref{ts_plots} illustrates changes in TGOV scores over time for 12 selected countries.
+The dataset’s extensive geographic coverage enables comparative analyses of regions and countries often overlooked in prior research [see @Wilson2021].
+
+For example, public trust in government has risen prominently in countries such as Germany, India, the Philippines, and Nigeria—likely due to stable governance under Merkel in Germany and Modi in India [@Oecd_trust2025; @Sardesai2023], populist administration policies in the Philippines [@Curato2017], and decreasing violence levels in Nigeria [@Harding2024].
+In contrast, trust levels have remained consistently high in China [@Tang2016] and relatively low in Australia [@Stoker2018].
+
+In contrast, TGOV scores have steadily or dramatically declined in Greece, Mexico, Argentina, and the United States, primarily due to economic crises in Greece [@Ervasti2019], widespread corruption in Mexico [@Morris2010], financial instability and political dysfunction in Argentina [@cfr_argentina], and rising political polarization and partisanship in the United States [@Hetherington2018].
+
+Some countries exhibit fluctuations, as seen in the United Kingdom and Turkey.
+In the UK, fluctuations could be associated with Brexit, sovereignty debates, and immigration issues [@guardian_covid2025].
+In Turkey, variations may reflect the personalization of political power and economic volatility [@Pewturks2024].
+
+The variations across countries and over time within countries offer valuable insights for scholars to explore in-depth.
+However, it is crucial to ensure that the TGOV scores accurately reflect trust in government across different contexts and time periods to ensure their effective use in academic research.
+To achieve this, I validate the TGOV scores through a combination of convergent and construct validation methods, which I describe in the following section
+
+
+# Technical Validation
+
+ 
+
+```{r internal_val_dat, include=FALSE}
+
+process_dcpo_input_raw <- function(dcpo_input_raw_df) {
+  dcpo_input_raw_df %>% 
+    with_min_yrs(3) %>% 
+    with_min_cy(5) %>% 
+    with_min_yrs(3) %>% #?
+    filter(year >= 1972 & n > 0) %>% 
+    group_by(country) %>% 
+    mutate(cc_rank = n()) %>% 
+    ungroup() %>% 
+    arrange(-cc_rank) %>% 
+    mutate(item = str_remove_all(item, "_"))
+}
+
+
+dcpo_input_raw1 <- read_csv(here::here("data","dcpo_input_raw_gov.csv") ) %>% 
+  process_dcpo_input_raw()
+
+
+internal_tscs_dat <- dcpo_input_raw1 %>% 
+  filter(item == "PTnatgov10") %>%  
+  mutate(title = "All Country-Years",
+         neg = FALSE) #Trust national government
+
+cs_dat <- dcpo_input_raw1 %>%
+  dplyr::select(year, survey, country) %>%
+  distinct(year, survey, country) %>%
+  group_by(year, survey) %>%
+  summarise(n = n()) #gallup_vop2005 wellcome2018 pew2017 #Do you have confidence in each of the following, or not?  national gov
+
+internal_cs_dat <- dcpo_input_raw1 %>% 
+  filter(survey == "wellcome2018") %>%  
+  mutate(title = "Wellcome (2018)",
+         neg = FALSE) 
+#Do you have confidence in each of the following, or not? 
+
+
+ts_dat <- dcpo_input_raw1 %>%
+  dplyr::select(year, item, survey, country) %>%
+  distinct(year, item, survey,  country) %>%
+  group_by(country,survey, item) %>%
+  summarise(n = n()) 
+
+internal_ts_dat <- dcpo_input_raw1 %>% 
+  filter(survey == "allbus" & item == "PTnatgov7") %>%  
+  mutate(title = "Germany",
+         neg = FALSE) #Trust national government TRUST: FEDERAL GOVERNMENT
+
+# how much trust you place in FEDERAL GOVERNMENT. Please use this scale. 1 means you have absolutely no trust at all, 7 means you have a great deal of trust.
+
+```
+
+
+```{r internalval,fig.cap = "Convergent Validation: Correlations Between TSC Scores and Individual TSC Source-Data Survey Items \\label{internal_val}"}
+
+internal_tscs_plot <- validation_plot(internal_tscs_dat,
+                                lab_x = .1,
+                                lab_y = 95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        strip.background = element_blank()) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score",
+       y = "% Expressing At Least Some of Trust")
+
+internal_cs_plot <- validation_plot(internal_cs_dat,
+                                lab_x = .1,
+                                lab_y = 95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        # strip.text.x = element_text(size=5),
+        strip.background = element_blank()) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TCS Score",
+       y = "% Expressing At Least Some Trust in National Government")
+
+internal_ts_plot <- validation_plot(internal_ts_dat,
+                                    lab_x = 1990,
+                                    lab_y = .95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        strip.background = element_blank()) +
+  coord_cartesian(ylim = c(0,1), xlim = c(1984, 2018)) +
+   scale_x_continuous(
+    minor_breaks = seq(1984, 2018, by = 8),
+    breaks = seq(1984, 2018, by = 8), limits = c(1984, 2018)) +
+  labs(x = "Year",
+       y = "Score") +
+  annotate("text", x = 2005, y = .5, size = 2,
+           label = 'TGOV Score') + #confidence in executive branch
+  annotate("text", x = 2008, y = .2, size = 2,
+           label = "Germany Allbus")
+
+internal_tscs_plot + internal_cs_plot + internal_ts_plot  +
+  patchwork::plot_annotation(caption = "Note: Gray whiskers and shading represent 80% credible intervals.")
+```
+
+Following a common approach to validate cross-national late opinion estimates [see, e.g., @Hu2023], I validate TGOV scores through convergent validation and construct validation.
+Convergent validation tests whether a measure is empirically associated with alternative indicators of the same concept [@Adcock2001, 540].
+Specifically, I 'internal' convergent validation tests [see, e.g., @Caughey2019, 689; @Solt2020c, 10] by comparing TGOV scores against individual items from the source data that were used to generate them.
+
+The left panel in Figure\nobreakspace{}\ref{internal_val} shows a scatterplot of country-years in which the TGOV scores are plotted against the percentage of respondents who expressed at least some trust, meaning a response score no smaller than 6 on the question: "Please tell me how much you personally trust each of the following institutions using a scale from 1 to 10, where [1] means ‘you do not trust the institution at all' and [10] means ‘you trust it completely’ (Eurobarometer)."
+The strong correlation (R = 0.87) indicates that TGOV scores effectively capture variations in trust in national government across country-years.
+
+The middle panel plots TGOV score against the percentage of respondents who expressed some trust in the question: "How much do you trust the national government in your country? Do you trust them a lot, some, not much, or not at all?" from the Wellcome Global Monitor Survey in 2018.
+Since all scales have been transformed to show positive trends with larger values indicating more trust, the 'some trust' was at 3.
+This question was asked in the most countries in one survey over the past 10 years, and the strong correlation (R = 0.94) demonstrates the broad applicability of the TGOV scores in capturing trust across diverse contexts.
+
+
+Finally, the right panel compares the trend of the longest item used since 1984 in the Germany Allbus survey: "How much trust do you place in the FEDERAL GOVERNMENT? Please use this scale: 1 means you have absolutely no trust at all, and 7 means you have a great deal of trust."
+The percentage is calculated by the proportion of respondents who gave a response of 5 or higher, relative to all respondents. 
+The TGOV scores align with trends in trust in the executive branch over time, effectively capturing historical changes.
+In all tests, the percentages are calculated using the function in the code based on their respective median scales, and the correlations are evaluated by incorporating uncertainty in the measures.
+
+
+
+```{r tgovextval, fig.cap = "External Validation for Trust in Government \\label{tgov_ev1}"}
+
+load(here::here("data","extval1.rda"))
+
+ext_wvs_election_plot <- validation_plot(ext_wvs_election_dat,
+                                      lab_x = .1,
+                                      lab_y = 95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        strip.background = element_blank()) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score",
+       y = "% Expressing Some Trust or More\nin Election")
+
+
+ext_eqls_parl_plot <- validation_plot(ext_eqls_parl_dat,
+                                      lab_x = .1,
+                                      lab_y = 95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        strip.background = element_blank()) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score",
+       y = "% Expressing Some Trust or More\nin Parliament")
+
+
+ext_eb_pa_plot <- validation_plot(ext_eb_pa_dat,
+                                      lab_x = .1,
+                                      lab_y = 95) +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.text  = element_text(size=8),
+        axis.title = element_text(size=9),
+        plot.title = element_text(hjust = 0.5, size = 9),
+        strip.background = element_blank()) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score",
+       y = "% Tend to Trust Public Administration")
+
+# For each of the following institutions, please tell me if you tend to trust it or tend not to trust it
+
+
+
+ext_wvs_election_plot + ext_eqls_parl_plot + ext_eb_pa_plot+ patchwork::plot_annotation(caption = "Note: Gray whiskers and shading represent 80% credible intervals.")
+
+```
+
+
+I then conducted three 'external' convergent validation tests, using survey items that were not part of the TGOV score estimation but are theoretically related to trust in government.
+These three items include trust in elections, parliament, and public administration in their respective countries.
+Figure\nobreakspace{}\ref{tgov_ev1} displays the results of this group of validation tests.
+
+I plot the TGOV score against public trust in elections from the available data in the World Value Survey Wave 7\footnote{The current data in this analysis is based on surveys conducted before 2021. The future iteration will update more availabl data.}, which asked respondents how much confidence they have in elections (is it a great deal, quite a lot, not very much, or none at all?) in the left plot.
+The TGOV score is then compared against public confidence in parliament from the European Quality of Life Survey (EQLS) in the center plot and against the percentage of respondents who expressed trust in public administration in their country, as measured by Eurobarometer, in the right panel.
+
+Across all three tests, the TGOV measure was positively correlated with the three types of public trust, with the strongest correlation observed with trust in parliament[R = 0.82], and moderate to strong correlations with trust in public administration [R = 0.74] and elections [R = 0.79].
+All correlations across tests are estimated while accounting for uncertainty in the measures.
+
+
+
+```{r tgovextval2,  fig.cap = "External Validation for Trust in Government \\label{tgov_ev2}"}
+
+load(here::here("data","extval2.rda"))
+
+voter_corruption <-  voter_corruption %>% 
+  left_join(theta_summary,
+            by = c("country", "year")) %>% 
+  filter(!is.na(mean))     ##cor is small when using whole data. 
+
+
+tgov_voter_merged <- theta_results_list %>%
+  mutate(
+    merged_data = purrr::map(
+      data,
+      ~ .x %>%
+        right_join(
+          voter_corruption,
+          by = c("country", "year")
+        ) %>%
+        filter(!is.na(theta))
+    )
+  )
+
+
+tgov_corrupt_cor <- tgov_voter_merged %>%
+  mutate(
+    cor = map_dbl(
+      merged_data,
+      ~ .x %>%
+        mutate(theta = theta * 100) %>%
+         filter(year == 2018) %>%
+        with(cor(theta, cor_prop, use = "pairwise.complete.obs"))
+    )
+  )
+
+tgovcor_cor <- tgov_corrupt_cor %>%
+  summarise(mean_cor = mean(cor, na.rm = TRUE)) %>%
+  pull(mean_cor) %>%
+  round(2) %>%
+  paste0("R = ", .)
+
+
+voter_cor_label <- tibble(mean = 0.15, cor_prop = 95, label = tgovcor_cor)
+
+voter_cor_plot <- ggplot(voter_corruption %>% filter (year == 2018),
+                         aes(x = mean,
+                             y = cor_prop)) +
+  geom_segment(aes(x = q10, xend = q90,
+                   y = cor_prop, yend = cor_prop),
+               na.rm = TRUE,
+               alpha = .2) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_bw() + theme(legend.position="none",
+                    axis.text  = element_text(size=8),
+                    axis.title = element_text(size=9),
+                     plot.title = element_text(hjust = 0.5, size = 9)
+                    ) +
+   coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score", y = '% expressing that there is at least \n some widespread corruption in the country",\n2018') +
+  ggtitle("Eurobarometer 88.2,CSES5, \nWVS7")  +
+  geom_label(data = voter_cor_label, aes(label = label),size = 2.5)
+
+
+sat_tgov <-  wvs7_sat  %>%
+  left_join(theta_summary %>% 
+              select(-kk, -tt),
+            by = c("country", "year")) %>%
+  filter(!is.na(mean))
+
+
+tgov_sat_merged <- theta_results_list %>%
+  mutate(
+    merged_data = purrr::map(
+      data,
+      ~ .x %>%
+        right_join(
+          sat_tgov,
+          by = c("country", "year")
+        ) %>%
+        filter(!is.na(theta))
+    )
+  )
+
+
+tgov_sat_cor <- tgov_sat_merged %>%
+  mutate(
+    cor = map_dbl(
+      merged_data,
+      ~ .x %>%
+        mutate(theta = theta * 100) %>%
+        with(cor(theta, prop, use = "pairwise.complete.obs"))
+    )
+  )
+
+tgovsat_cor <- tgov_sat_cor %>%
+  summarise(mean_cor = mean(cor, na.rm = TRUE)) %>%
+  pull(mean_cor) %>%
+  round(2) %>%
+  paste0("R = ", .)
+
+tgov_sat_label <- tibble(mean = 0.1, prop = 95, label = tgovsat_cor)
+
+tgov_sat_plot <- ggplot(sat_tgov,
+                         aes(x = mean,
+                             y = prop)) +
+  geom_segment(aes(x = q10, xend = q90,
+                   y = prop, yend = prop),
+               na.rm = TRUE,
+               alpha = .2) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_bw() + theme(legend.position="none",
+                    axis.text  = element_text(size=8),
+                  axis.title = element_text(size=9),
+                   plot.title = element_text(hjust = 0.5, size = 9)
+                  ) +
+   coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Score", y = "% satisfying with the political system\n performance, WVS7") +
+  ggtitle("World Value Survey Wave 7")  +
+  geom_label(data =tgov_sat_label, aes(label = label),size = 2.5)
+
+
+ead2019 <- ead2019  %>% 
+  left_join(theta_summary, by = c("country", "year")) %>% 
+  filter(!is.na(mean)) %>% 
+  mutate(iso3c = countrycode::countrycode(country,
+                                          origin = "country.name",
+                                          destination = "iso3c"))
+
+tgov_ead_merged <- theta_results_list %>%
+  mutate(
+    merged_data = purrr::map(
+      data,
+      ~ .x %>%
+        right_join(
+          ead2019,
+          by = c("country", "year")
+        ) %>%
+        filter(!is.na(theta))
+    )
+  )
+
+
+tgov_ead_cor <- tgov_ead_merged %>%
+  mutate(
+    cor = map_dbl(
+      merged_data,
+      ~ .x %>%
+        mutate(theta = theta * 100) %>%
+         filter(country %in% oecd_countries) %>%
+        filter(year == 2018) %>%
+        with(cor(theta, Approval_Smoothed, use = "pairwise.complete.obs"))
+    )
+  )
+
+
+tgovead_cor <- tgov_ead_cor %>%
+  summarise(mean_cor = mean(cor, na.rm = TRUE)) %>%
+  pull(mean_cor) %>%
+  round(2) %>%
+  paste0("R = ", .) 
+
+tgov_ead_label <- tibble(mean = 0.1, Approval_Smoothed = 95, label = tgovead_cor)
+
+
+tgov_ead_plot <- ggplot(ead2019  %>% 
+         filter(country %in% oecd_countries) %>%
+        filter(year == 2018),
+                   aes(x = mean,
+                       y = Approval_Smoothed)) +
+  geom_segment(aes(x = q10, xend = q90,
+                   y = Approval_Smoothed, yend = Approval_Smoothed),
+               na.rm = TRUE,
+               alpha = .2) +
+  geom_smooth(method = 'lm', se = FALSE)  +
+  theme_bw() + theme(legend.position="none",
+                    axis.text  = element_text(size=8),
+                  axis.title = element_text(size=9),
+                   plot.title = element_text(hjust = 0.5, size = 9)
+                  ) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
+  labs(x = "TGOV Scores", y = "Executive Approval Estimates \n in OECD countries,\n Executive Approval Project") +
+   ggtitle("Executive Approval Estimates, \n2018")  +
+  geom_label(data = tgov_ead_label, aes(label = label), size = 2.5)  
+
+
+(tgov_sat_plot + voter_cor_plot + tgov_ead_plot) + patchwork::plot_annotation(caption = "Note: Gray whiskers and shading represent 80% credible intervals.")
+
+
+
+
+```
+
+
+
+I then conducted tests of construct validation.
+According to @Adcock2001 [p. 542], construct validation assesses whether an indicator is empirically correlated with other indicators that are theoretically expected to be causally related to it.
+
+
+In this series of validation tests, I focused on three indicators that are theoretically causally related to trust in national government: the public's satisfaction with political system performance, the public's perception of corruption, and executive approval ratings.
+Abundant research has shown that trust is a strong predictor of satisfaction with political system performance [@Hetherington2018; @chanley_origins_2000] and approval ratings [@citrin2001political; @miller1991confidence; @citrin1974comment], while also being a negative consequence of perceived corruption [@Torgler2011participation; @Reisinger2017does; @Anderson2003].
+If the TGOV scores are a valid measure, I would expect to observe a positive relationship between TGOV and both satisfaction and approval ratings, but a negative relationship with perceptions of corruption.
+The results are presented in Figure\nobreakspace{}\ref{tgov_ev2}.
+As anticipated, there is a clear positive relationship between TGOV scores and satisfaction with political system performance, measured as the percentage of individuals expressing at least some satisfaction with political system performance in the WVS Wave 7, shown in the left panel.
+
+A similar positive correlation between TGOV scores and executive approval ratings is observed in the right panel.
+Executive approval ratings are measured by the Executive Approval Project (version 2) [@carlin2019executive], and I used smoothed approval ratings for OECD countries in year of 2018 due to their better coverage.
+There is also a clear negative relationship between TGOV scores and perceptions of widespread corruption, as surveyed in Eurobarometer, the Comparative Study of Electoral Systems (CSES), and the WVS in year of 2017, shown in the center panel.
+This test confirms the expectation that when there is widespread perception of corruption in government, the public is less likely to trust their national government.
+In all three tests, the correlations are estimated with the uncertainty in the measures taken into account.
+
+In sum, the convergent validation tests, including both internal and external validation (Figure\nobreakspace{}\ref{internal_val} and \nobreakspace{}\ref{tgov_ev1}), and the construct validation test (Figure\nobreakspace{}\ref{tgov_ev2}), provide strong evidence that the TGOV scores are a valid measure of public trust in national government.
+
+# Usage Notes
+Although political trust is a long-standing interdisciplinary topic studied by economists, political scientists, sociologists, and psychologists among others, its importance increases during governance crises, including but not limited to public health emergencies, climate change, and rising polarization and populism.
+However, our understanding of political trust has been limited to single countries or regions with rich longitudinal data, which may not generalize to other areas, or to snapshots of cross-sectional analysis that cannot capture changes over time [@Kerr2024; @Kolczynska2020; @Devine2024].
+The TGOV score allows scholars from various disciplines to explore the causes and consequences of trust in government across countries over time.
+
+To address missing data at the country-year level, random-walk priors were used in the DCPO model, as described in the methodology.
+This approach smooths the estimates, making time-series data possible, but it also introduces greater measurement uncertainty.
+Ignoring this uncertainty will distort both statistical and substantial inferences, as demonstrated in @Tai2024.
+Therefore, I suggest that scholars using the TGOV data in their analyses incorporate measurement uncertainty into their models.
+There are several ways to account for uncertainty [see, e.g., @Tai2024; @Woo2024], and to facilitate this process, the entire dataset from four chains has been provided in the dataverse, in addition to the mean measure of trust in government.
+
+The TGOV dataset will be updated regularly to include the most recent publicly available data.
+In addition to the dataset, a user-friendly dashboard will be available for scholars and the public to visualize trust in government for countries and years of their choosing. 
+The current and future versions of the TGOV dataset offer invaluable opportunities for advancing the study of politics, governance, and elections.
+
+# Code Availability
+The software tools used for data processing are described in the Methods and Technical Validation sections.
+The code used to generate the dataset and conduct validation test are openly available at: 
+
+# References {.unlisted .unnumbered}
+
+::: {#refs-text}
+:::
+# Author Contributions
+The author, Yuehong Cassandra Tai, collected and processed the raw data, generated the dataset, wrote, reviewed and edited the manuscript. 
+
+# Competing Interests
+The author declares no competing interests.
+
+# Acknowledgements 
+
+\pagebreak
+
+# Appendix A:  Indicators Used in the Trust in Government Latent Variable Model
+
+\noindent Table A1: Indicators Used in the Trust in Government Latent Variable Model
+
+```{r dcpo_items_table}
+
+items_summary <- read_csv(here::here("data","items_summary.csv"))
+items_summary %>% 
+  transmute(`Survey-Item-Code` = item,
+          #  `Country-Years` = as.character(n_cy),
+          #  `Question Text` = str_replace(question_text, "([^(]*)\\(.*", "\\1"),
+          #  `Response Categories` = response_categories,
+            `Dispersion` = dispersion,
+            `Difficulties`= difficulties #,
+          #  `Survey Dataset Codes` = all_surveys
+          ) %>% 
+  modelsummary::datasummary_df(output = "kableExtra",
+                               longtable = TRUE) %>% 
+  kableExtra::column_spec(1, width = "7em") %>%
+  kableExtra::column_spec(2, width = "7em") %>%
+  kableExtra::column_spec(3, width = "7em") %>%
+  kableExtra::kable_styling(font_size = 7) %>%
+  kableExtra::kable_styling(latex_options = c("repeat_header")) %>%
+  kableExtra::kable_styling(latex_options = "striped")
+```
