@@ -123,6 +123,14 @@
 \usepackage[normalem]{ulem}
 \usepackage{makecell}
 \usepackage{xcolor}
+\usepackage{siunitx}
+
+    \newcolumntype{d}{S[
+      table-align-text-before=false,
+      table-align-text-after=false,
+      input-symbols={-,\*+()}
+    ]}
+  
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -212,7 +220,7 @@ Finally, I discuss the importance of incorporating measurement uncertainty when 
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/itemcountryplots-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/itemcountryplots-1.pdf}
 \caption{\label{fig:itemcountryplots}Countries and Years with the Most Observations in the Source Data of Trust in Government \label{tgov_item_country_plots}}
 \end{figure}
 
@@ -290,7 +298,7 @@ The estimates in all 2,674 country-years spanned by the source data is the TGOV 
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/cs-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/cs-1.pdf}
 \caption{\label{fig:cs}TGOV Scores, Most Recent Available Year \label{cs_mry}}
 \end{figure}
 
@@ -303,7 +311,7 @@ These lower-ranked countries typically faced serious challenges around the years
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/ts-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/ts-1.pdf}
 \caption{\label{fig:ts}TCS Scores Over Time Within Selected Countries \label{ts_plots}}
 \end{figure}
 
@@ -325,7 +333,7 @@ To achieve this, I validate the TGOV scores through a combination of convergent 
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/internalval-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/internalval-1.pdf}
 \caption{\label{fig:internalval}Convergent Validation: Correlations Between TSC Scores and Individual TSC Source-Data Survey Items \label{internal_val}}
 \end{figure}
 
@@ -347,7 +355,7 @@ In all tests, the percentages are calculated using the function in the code base
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/tgovextval-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/tgovextval-1.pdf}
 \caption{\label{fig:tgovextval}External Validation for Trust in Government \label{tgov_ev1}}
 \end{figure}
 
@@ -363,7 +371,7 @@ All correlations across tests are estimated while accounting for uncertainty in 
 
 \begin{figure}
 \centering
-\includegraphics{data_description_gov_files/figure-latex/tgovextval2-1.pdf}
+\includegraphics{trust_gov_files/figure-latex/tgovextval2-1.pdf}
 \caption{\label{fig:tgovextval2}External Validation for Trust in Government \label{tgov_ev2}}
 \end{figure}
 
