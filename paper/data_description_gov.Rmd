@@ -7,8 +7,7 @@ output:
     number_sections: no
     latex_engine: xelatex
     pandoc_args: --lua-filter=multibib.lua
-title: "The TGOV Dataset: 
-   Comparative Estimates of Public Trust in Government 
+title: "Comparative Estimates of Public Trust in Government 
    Across 116 Countries, 1973–2020"
    
 #thanks: "Corresponding author: [yhcasstai@psu.edu](mailto:yhcasstai@psu.edu). Current version: `r format(Sys.time(), '%B %d, %Y')`.  Replication materials and complete revision history may be found at [https://github.com/Tyhcass/TGOV](https://github.com/Tyhcass/TGOV). "
@@ -57,6 +56,17 @@ header-includes:
 
 - Yuehong Cassandra Tai, corresponding author, ORCID: <https://orcid.org/0000-0001-7303-7443>, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, [yhcasstai\@psu.edu](mailto:yhcasstai@psu.edu){.email}
 
+# Code Availability
+The software tools used for data processing are described in the methods and validation sections.
+The code used to generate the dataset and conduct validation test are openly available at: https://github.com/Tyhcass/TGOV.
+
+# Conflict of Interest Disclosure
+The author declares no competing interests.
+
+# Acknowledgements 
+
+
+
 \pagebreak
 
 
@@ -70,11 +80,13 @@ header-includes:
 
 ```{=tex}
 \begin{abstract}
-Political trust plays a critical role in understanding key political questions, including regime support, democratic legitimacy, policy preferences, and political behavior. However, the lack of comparable, cross-national data has limited scholars' ability to analyze the relationship of political trust with quantities of interest and to generalize findings across different countries and time periods. To address this gap, this paper introduces the Trust in Government (TGOV) Dataset, a time-series cross-sectional resource covering 116 countries from 1973 to 2020. Built using a Bayesian latent variable model, TGOV harmonizes 1,555 country-year observations from 189 national and cross-national surveys, providing mean estimates of trust in government alongside full posterior distributions to account for measurement uncertainty. The TGOV dataset enables scholars to analyze trust’s dynamic relationships with institutional performance, policy outcomes, and crisis resilience across political systems. More broadly, it supports interdisciplinary research on governance, inequality, state-society relations, public health compliance, climate policy acceptance, and digital governance innovations.
+ 
+
+\emph{Objective}. Political trust plays a critical role in understanding key political questions, including regime support, democratic legitimacy, policy preferences, and political behavior. However, the lack of comparable, cross-national data has limited scholars' ability to analyze the relationship of political trust with quantities of interest and to generalize findings across different countries and time periods. To address this gap, this paper introduces the Trust in Government (TGOV) Dataset, a time-series cross-sectional resource covering 116 countries from 1973 to 2020. \emph{Method}. Built using a Bayesian latent variable model, TGOV harmonizes 1,555 country-year observations from 189 national and cross-national surveys, providing mean estimates of trust in government alongside full posterior distributions to account for measurement uncertainty. \emph{Results}. The TGOV dataset demonstrates robustness in a series of internal and external validations, as well as in the construct validation test, confirming that the TGOV scores are a valid measure of public trust in national government. \emph{Conclusion}. The TGOV dataset enables scholars to analyze trust’s dynamic relationships with institutional performance, policy outcomes, and crisis resilience across political systems. More broadly, it supports interdisciplinary research on governance, inequality, state-society relations, public health compliance, climate policy acceptance, and digital governance innovations.
 
 \end{abstract}
 
-Keywords: trust in government, latent variable model, election
+Keywords: trust in government, latent variable model, election, corruption, approval ratings
 ```
 \pagebreak
 
@@ -388,7 +400,7 @@ back_to_numeric <- function(string_number) {
 
 
 
-# Background & Summary
+# Introduction
 
 Trust is critical for understanding key political, societal, and economic issues, including but not limited to regime support, democratic legitimacy, and public confidence in elections [@Easton1975; @Norris2002; @Wuttke2020;@Kerr2024]; civic duty, participation, and law compliance [@Valgardhsson2021; @Hooghe2013; @oksanen2020regulation; @letki2006investigating; @tyler1990justice]; government performance, policy preferences, and inequality [@Rose2010; @Goubin2020; @Rudolph2005; @hetherington2005trust]; as well as broader outcomes such as public health responses to crises like the COVID-19 pandemic [@Zaki2022;@Devine2021trust].
 
@@ -407,7 +419,7 @@ In the following sections, I first describe the source data and collection proce
 I then validate TGOV scores through internal and external convergent validation tests using individual trust items—such as trust in government, parliament, elections, and public administration—as well as construct validation tests using perceptions of corruption, satisfaction with political system performance, and executive approval ratings. 
 Finally, I discuss the importance of incorporating measurement uncertainty when using this dataset, provide practical approaches for doing so, and outline plans for expanding and maintaining the TGOV dataset.
 
-# Methods
+#  Data & Methods
 
 ```{r itemcountryplots, fig.height = 4, fig.cap = "Countries and Years with the Most Observations in the Source Data of Trust in Government \\label{tgov_item_country_plots}",cache=FALSE}
 
@@ -632,7 +644,7 @@ cby_map + (countries_plot/ybc_plot) + plot_layout(widths = c(3.5, 1.5))
 
 ```
 
-## Input Data
+## Raw Data
 
 Although many national and cross-national surveys have asked questions on trust toward national government, comparative data at the aggregate level is sparse and fragmented.
 This fragmentation is primarily due to limited data availability across countries and years, as well as inconsistencies in question wording and interpretation.
@@ -811,10 +823,7 @@ The dispersion parameters of the survey items indicate that all of our source da
 
 The estimates in all `r res_cy` country-years spanned by the source data is the TGOV scores.
 
-# Data Records
-
-I provide both mean measures of trust in government (theta_summary) and the entire results (theta_results) to facilitate downstream analysis.
-The data is accessible at OSF https://osf.io/qr6ca/files/osfstorage.
+# Results
 
 ## Estimating Trust in Government
 
@@ -933,10 +942,6 @@ The variations across countries and over time within countries offer valuable in
 However, it is crucial to ensure that the TGOV scores accurately reflect trust in government across different contexts and time periods to ensure their effective use in academic research.
 To achieve this, I validate the TGOV scores through a combination of convergent and construct validation methods, which I describe in the following section
 
-
-# Technical Validation
-
- 
 
 ```{r internal_val_dat, include=FALSE}
 
@@ -1342,7 +1347,7 @@ In all three tests, the correlations are estimated with the uncertainty in the m
 
 In sum, the convergent validation tests, including both internal and external validation (Figure\nobreakspace{}\ref{internal_val} and \nobreakspace{}\ref{tgov_ev1}), and the construct validation test (Figure\nobreakspace{}\ref{tgov_ev2}), provide strong evidence that the TGOV scores are a valid measure of public trust in national government.
 
-# Usage Notes
+#  Discussion & Conclusion
 Although political trust is a long-standing interdisciplinary topic studied by economists, political scientists, sociologists, and psychologists among others, its importance increases during governance crises, including but not limited to public health emergencies, climate change, and rising polarization and populism.
 However, our understanding of political trust has been limited to single countries or regions with rich longitudinal data, which may not generalize to other areas, or to snapshots of cross-sectional analysis that cannot capture changes over time [@Kerr2024; @Kolczynska2020; @Devine2024].
 The TGOV score allows scholars from various disciplines to explore the causes and consequences of trust in government across countries over time.
@@ -1357,21 +1362,12 @@ The TGOV dataset will be updated regularly to include the most recent publicly a
 In addition to the dataset, a user-friendly dashboard will be available for scholars and the public to visualize trust in government for countries and years of their choosing. 
 The current and future versions of the TGOV dataset offer invaluable opportunities for advancing the study of politics, governance, and elections.
 
-# Code Availability
-The software tools used for data processing are described in the Methods and Technical Validation sections.
-The code used to generate the dataset and conduct validation test are openly available at: https://github.com/Tyhcass/TGOV.
 
 # References {.unlisted .unnumbered}
 
 ::: {#refs-text}
 :::
-# Author Contributions
-The author, Yuehong Cassandra Tai, collected and processed the raw data, generated the dataset, wrote, reviewed and edited the manuscript. 
 
-# Competing Interests
-The author declares no competing interests.
-
-# Acknowledgements 
 
 \pagebreak
 
