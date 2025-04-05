@@ -123,14 +123,6 @@
 \usepackage[normalem]{ulem}
 \usepackage{makecell}
 \usepackage{xcolor}
-\usepackage{siunitx}
-
-    \newcolumntype{d}{S[
-      table-align-text-before=false,
-      table-align-text-after=false,
-      input-symbols={-,\*+()}
-    ]}
-  
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -148,7 +140,7 @@
 
 \title{Comparative Estimates of Public Trust in Government Across 116 Countries, 1973--2020}
 \author{}
-\date{\vspace{-2.5em}April 04, 2025}
+\date{\vspace{-2.5em}April 05, 2025}
 
 \begin{document}
 \maketitle
@@ -312,7 +304,7 @@ These lower-ranked countries typically faced serious challenges around the years
 \begin{figure}
 \centering
 \includegraphics{trust_gov_files/figure-latex/ts-1.pdf}
-\caption{\label{fig:ts}TCS Scores Over Time Within Selected Countries \label{ts_plots}}
+\caption{\label{fig:ts}TGOV Scores Over Time Within Selected Countries \label{ts_plots}}
 \end{figure}
 
 Figure\nobreakspace{}\ref{ts_plots} illustrates changes in TGOV scores over time for 12 selected countries.
@@ -334,7 +326,7 @@ To achieve this, I validate the TGOV scores through a combination of convergent 
 \begin{figure}
 \centering
 \includegraphics{trust_gov_files/figure-latex/internalval-1.pdf}
-\caption{\label{fig:internalval}Convergent Validation: Correlations Between TSC Scores and Individual TSC Source-Data Survey Items \label{internal_val}}
+\caption{\label{fig:internalval}Convergent Validation: Correlations Between TGOV Scores and Individual TGOV Source-Data Survey Items \label{internal_val}}
 \end{figure}
 
 Following a common approach to validate cross-national late opinion estimates (see, e.g., Hu et al. 2024), I validate TGOV scores through convergent validation and construct validation.

@@ -1,12 +1,12 @@
 ---
 output: 
    bookdown::pdf_document2:
-    fig_caption: yes
-    keep_tex: yes
-    toc: no
-    number_sections: no
-    latex_engine: xelatex
-    pandoc_args: --lua-filter=multibib.lua
+     fig_caption: yes
+     keep_tex: yes
+     toc: no
+     number_sections: no
+     latex_engine: xelatex
+     pandoc_args: --lua-filter=multibib.lua
 title: "Comparative Estimates of Public Trust in Government 
    Across 116 Countries, 1973–2020"
    
@@ -888,7 +888,7 @@ The least corrupt counties, like Denmark, Switzerland, Finland, and Norway, also
 On the other hand, the latest scores for `r bottom5` have them as the places where the public has the lowest trust in government.
 These lower-ranked countries typically faced serious challenges around the years of the most recent available data, such as severe corruption (e.g., Venezuela and Iraq), election-related political violence (e.g., Brazil), or security threats and conflict (e.g., Tunisia and Libya).
 
-```{r ts, fig.cap="TCS Scores Over Time Within Selected Countries \\label{ts_plots}", fig.height=3.5,fig.width = 7}
+```{r ts, fig.cap="TGOV Scores Over Time Within Selected Countries \\label{ts_plots}", fig.height=3.5,fig.width = 7}
 
 countries <- c("Germany","United States","United Kingdom",
                 "Greece", "Turkey","Australia",
@@ -997,7 +997,7 @@ internal_ts_dat <- dcpo_input_raw1 %>%
 ```
 
 
-```{r internalval,fig.cap = "Convergent Validation: Correlations Between TSC Scores and Individual TSC Source-Data Survey Items \\label{internal_val}"}
+```{r internalval,fig.cap = "Convergent Validation: Correlations Between TGOV Scores and Individual TGOV Source-Data Survey Items \\label{internal_val}"}
 
 internal_tscs_plot <- validation_plot(internal_tscs_dat,
                                 lab_x = .1,
@@ -1023,7 +1023,7 @@ internal_cs_plot <- validation_plot(internal_cs_dat,
         # strip.text.x = element_text(size=5),
         strip.background = element_blank()) +
   coord_cartesian(xlim = c(0,1), ylim = c(0,100)) +
-  labs(x = "TCS Score",
+  labs(x = "TGOV Score",
        y = "% Expressing At Least Some Trust in National Government")
 
 internal_ts_plot <- validation_plot(internal_ts_dat,
