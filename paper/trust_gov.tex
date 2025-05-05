@@ -130,7 +130,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
-  pdftitle={Comparative Estimates of Public Trust in Government Across 116 Countries, 1973--2020},
+  pdftitle={Comparative Estimates of Public Trust in Government Across 115 Countries, 1973--2020},
   colorlinks=true,
   linkcolor={black},
   filecolor={Maroon},
@@ -138,9 +138,9 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
-\title{Comparative Estimates of Public Trust in Government Across 116 Countries, 1973--2020}
+\title{Comparative Estimates of Public Trust in Government Across 115 Countries, 1973--2020}
 \author{}
-\date{\vspace{-2.5em}April 05, 2025}
+\date{\vspace{-2.5em}}
 
 \begin{document}
 \maketitle
@@ -157,9 +157,8 @@
   Yuehong Cassandra Tai, corresponding author, ORCID: \url{https://orcid.org/0000-0001-7303-7443}, Assistant Research Professor, Center for Social Data Analytics, Pennsylvania State University, \href{mailto:yhcasstai@psu.edu}{\nolinkurl{yhcasstai@psu.edu}}
 \end{itemize}
 
-\section{Code Availability}\label{code-availability}
+\section{Data and Code Availability}\label{data-and-code-availability}
 
-The software tools used for data processing are described in the methods and validation sections.
 The code used to generate the dataset and conduct validation test are openly available at: \url{https://github.com/Tyhcass/TGOV}.
 
 \section{Conflict of Interest Disclosure}\label{conflict-of-interest-disclosure}
@@ -177,9 +176,7 @@ The author declares no competing interests.
 \selectfont
 
 \begin{abstract}
- 
-
-\emph{Objective}. Political trust plays a critical role in understanding key political questions, including regime support, democratic legitimacy, policy preferences, and political behavior. However, the lack of comparable, cross-national data has limited scholars' ability to analyze the relationship of political trust with quantities of interest and to generalize findings across different countries and time periods. To address this gap, this paper introduces the Trust in Government (TGOV) Dataset, a time-series cross-sectional resource covering 116 countries from 1973 to 2020. \emph{Method}. Built using a Bayesian latent variable model, TGOV harmonizes 1,555 country-year observations from 189 national and cross-national surveys, providing mean estimates of trust in government alongside full posterior distributions to account for measurement uncertainty. \emph{Results}. The TGOV dataset demonstrates robustness in a series of internal and external validations, as well as in the construct validation test, confirming that the TGOV scores are a valid measure of public trust in national government. \emph{Conclusion}. The TGOV dataset enables scholars to analyze trust’s dynamic relationships with institutional performance, policy outcomes, and crisis resilience across political systems. More broadly, it supports interdisciplinary research on governance, inequality, state-society relations, public health compliance, climate policy acceptance, and digital governance innovations.
+Political trust plays a critical role in understanding key political phenomena, including regime support, democratic legitimacy, policy preferences, and political behavior. However, the lack of comparable, cross-national data has limited scholars' ability to analyze the relationship of political trust with quantities of interest and to generalize findings across different countries and time periods. To address this gap, this paper introduces the Trust in Government (TGOV) Dataset—a time-series, cross-sectional resource covering 115 countries/territories from 1973 to 2020, constructed using a Bayesian latent variable model on 1,555 country-year observations from 189 national and cross-national surveys. The TGOV dataset has been validated through a series of internal, external, and construct validation tests. It enables scholars to investigate the dynamic relationship between political trust and institutional performance, policy outcomes, and crisis resilience across diverse political systems.
 
 \end{abstract}
 
@@ -191,22 +188,16 @@ Keywords: trust in government, latent variable model, election, corruption, appr
 
 \section{Introduction}\label{introduction}
 
-Trust is critical for understanding key political, societal, and economic issues, including but not limited to regime support, democratic legitimacy, and public confidence in elections (Easton 1975; Norris et al. 2002; Wuttke, Schimpf, and Schoen 2020; Kerr, King, and Wahman 2024); civic duty, participation, and law compliance (Valgarsson et al. 2021; Hooghe and Marien 2013; Oksanen et al. 2020; Letki 2006; Tyler 1990); government performance, policy preferences, and inequality (Rose and Mishler 2010; Goubin and Hooghe 2020; Rudolph and Evans 2005; Marc J. Hetherington et al. 2005); as well as broader outcomes such as public health responses to crises like the COVID-19 pandemic (Zaki et al. 2022; Devine et al. 2021).
-
-Regardless of universal exist of political trust and these issues across different regimes (Tang 2016), a significant challenge for scholars examining these issues or testing theories generally is the limited availability of comprehensive comparative data on trust in government across countries and over time.
+Trust is critical for understanding key political, societal, and economic issues, including but not limited to regime support, democratic legitimacy, and public confidence in elections (Easton 1975; Norris et al. 2002; Wuttke, Schimpf, and Schoen 2020; Kerr, King, and Wahman 2024); civic duty, participation, and law compliance (Valgarsson et al. 2021; Hooghe and Marien 2013; Tyler 1990); government performance, policy preferences, and inequality (Rose and Mishler 2010; Goubin and Hooghe 2020; Rudolph and Evans 2005); as well as broader outcomes such as public health responses to crises like the COVID-19 pandemic (Zaki et al. 2022; Devine et al. 2021).
+However, regardless of universal exist of political trust and these issues across different regimes, a significant challenge for scholars examining these issues or testing theories generally is the limited availability of comprehensive comparative data on trust in government across countries and over time.
 Existing datasets often suffer from fragmented coverage, restricting researchers' ability to rigorously compare trust dynamics across diverse political and regional contexts (Devine 2024; Kerr, King, and Wahman 2024).
-Most of these studies focus on a single country, dominated by studies in the U.S. and U.K. and even when comparative research was studied, most of them focused on certain region or democratic countries, such European countries (Devine 2024), although social and political trust is not exclusive to democracies.
-The lack of time-series comparative trust data makes it impossible to examine the theories about the relationship between temporal changes of trust and other quantities of interest, most of which have temporal features. Scholars have to choose between more countries at a snapshot time or fewer countries involved in longitudinal data.
-It turns out that comparative surveys usually incorporate more countries rather than more time points, which result in more differences between countries than differences over time (Kolczynska et al. 2020).
+Most of these studies focus on a single country, dominated by studies in the U.S. and U.K. and even when comparative research was studied, most of them focused on certain region or democratic countries, such European countries (Devine 2024).
+The lack of time-series comparative trust data makes it impossible to examine the theories about the relationship between temporal changes of trust and other quantities of interest, most of which have temporal features.
 
-To address this critical gap, I introduce a time-series cross-national dataset measuring public trust in national governments (TGOV), covering 116 countries from 1973 to 2020.
-Using a sophisticated Bayesian latent variable model developed by Solt (2020b), this dataset synthesizes various survey sources into robust, comparable trust estimates, drawn from 189 with 2,136 country-year-item covering 47.
+To address this critical gap, I introduce a time-series cross-national dataset measuring public trust in national governments (TGOV), covering 115 countries from 1973 to 2020.
+Using a sophisticated Bayesian latent variable model developed by Solt (2020b), this dataset synthesizes various survey sources into robust, comparable trust estimates, drawn from 189 with 2,136 country-year-item covering 47 years.
 In addition to providing mean estimates of trust, the dataset includes full posterior samples, enabling scholars to explicitly incorporate the measurement uncertainty inherent in latent variable models.
 By offering temporal and cross-national coverage, the TGOV dataset facilitates comparative research on the causes and consequences of political trust, enhancing our understanding of democratic governance, electoral behavior, policy development, and related areas.
-
-In the following sections, I first describe the source data and collection process, explain the methodology used to estimate public trust in government, and introduce the TGOV dataset.
-I then validate TGOV scores through internal and external convergent validation tests using individual trust items---such as trust in government, parliament, elections, and public administration---as well as construct validation tests using perceptions of corruption, satisfaction with political system performance, and executive approval ratings.
-Finally, I discuss the importance of incorporating measurement uncertainty when using this dataset, provide practical approaches for doing so, and outline plans for expanding and maintaining the TGOV dataset.
 
 \section{Data \& Methods}\label{data-methods}
 
@@ -222,71 +213,42 @@ Although many national and cross-national surveys have asked questions on trust 
 This fragmentation is primarily due to limited data availability across countries and years, as well as inconsistencies in question wording and interpretation.
 
 To construct a dynamic and comparable trust in government dataset, I systematically reviewed 189 unique survey projects spanning 116 countries over 47 year.
-Most of these surveys, including both data and codebooks, are publicly accessible for direct download or available upon request.
-To identify relevant survey questions capturing public attitudes toward national governments, I searched codebooks using keywords such as ``trust,'' ``confidence,'' and ``(national) government,'' identifying 10 unique survey questions that captured public attitudes toward trust in national governments.
-For surveys without English-language codebooks, I first translated them into English using Google Translate to facilitate keyword searches.
-To minimize potential oversight of relevant questions, I then conducted an additional search round using translated keywords within the original-language codebooks.
-The question numbers, corresponding response scales, and survey weights were recorded directly from the codebooks.
-Since there might be potential discrepancies between response scales listed in codebooks and those coded within datasets, I manually verified alignment between survey questions and their coded scales.
-The survey dataset codes was then further cleaned and prepared using the \texttt{DCPOtools} R package (Solt et al. 2019), where the scales that required reordering were adjusted to reflect increasing levels of attitudes.
-For example, scales such as ``a great deal of confidence (1), quite a lot of confidence (2), not very much confidence (3), or none at all (4)'' were reversed, ensuring that lower numbers always corresponded to lower levels of trust, and higher numbers corresponded to higher levels of trust.
+I identified 10 unique survey questions that captured public attitudes toward trust in national governments.
+To improve comparability and reduce uncertainty from sparse data, I followed standard practice by excluding survey items that were rarely asked (Woo, Goldberg, and Solt 2023).
 
-After collecting the raw data, I followed standard practice by excluding survey items that were rarely asked (Woo, Goldberg, and Solt 2023).
-In this study, I took a conservative approach to exclude rare survey items.
-Specifically, I excluded items that were asked in fewer than five country-years in countries surveyed at least three times, using a two-round checking process (Tai and Solt 2025).
-This step was taken to improve comparability and reduce uncertainty from sparse data.
-
-Compared to other important survey questions on public gender egalitarianism (Woo, Goldberg, and Solt 2023) and gay rights (Woo et al. Forthcoming), data on political trust in government is relative rich in terms of covered countries and years.
+Compared to other important survey questions on public gender egalitarianism (Woo, Goldberg, and Solt 2023) and gay rights (Woo et al. Forthcoming), data on political trust in government is relative rich.
 In the country-years span, among the 2,674 country-years, 58\% of it has available information.
-However, if we have observations for every year in each country surveyed, the number would be 5,452, and a complete set of country-year-items would encompass 54,520 observations.
-In fact, even collecting as many available national and cross-national data as possible, the current source data has 1,555 country-years and a total of 2,136 country-year-item observations which are 29\% of a complete set of total country-year and 4\% of a complete set of country-year-items.
-
-Consider the most frequently asked item in the data we collected, which asks respondents ``How Much Trust in Government''.
-Employed by 47 surveys, this question ``Could you tell me how much confidence you have in national government: is it a great deal of confidence, quite a lot of confidence, not very much confidence or none at all? (WVS)''\footnote{There are many different versions of this questions. For example, ``please tell me how much trust you have in government. Is it a great deal of trust, quite a lot of trust, not very much trust, or none at all?(Arab Barometer)} was asked in a total of 816 different country-years.
-However, even this frequently asked item constitutes only 31\% of the total country-years spanned by the collected data.
+However, if we have observations for every year in each country surveyed, the number would be 5,452.
+In fact, even collecting as many available national and cross-national data as possible, the current source data has 1,555 country-years which are 29\% of a complete set of total country-year.
 
 The left panel of Figure \nobreakspace{}\ref{tgov_item_country_plots} maps the global distribution of observed country-years.
-European and Latin American countries exhibit longer time series data, reflecting the frequent administration of Eurobarometer and AmericasBarometer surveys, as well as scholarly interest in political trust within democratic contexts and emerging democracies.
-By contrast, data from Asian and African countries is limited.
-The upper right panel further illustrates this geographical disparity: Germany, with 54 country-year-item observations, is the most represented country, followed by Spain, Finland, the United Kingdom, and Poland.
-The lower right panel counts the countries observed in each year and reveals how few relevant survey items were asked before 1990.
+European and Latin American countries have longer time series due to the frequent administration of Eurobarometer and AmericasBarometer surveys and strong scholarly interest in democratic and emerging regimes.
+In contrast, data from Asian and African countries is limited.
+The upper right panel further illustrates this geographical disparity: Germany leads with 54 country-year-item observations, followed by Spain and Finland.
+The lower right panel shows how few relevant survey items existed before 1990.
 Country coverage reached its peak in 2018, when respondents in 111 countries were asked items about trust in government.
-In general, although questions on trust in government appeared as early as 1970s, trust questions were not surveyed steadily and broadly until the 1990s, with geographic disparity.
+Overall, although questions on trust in government appeared as early as 1970s, they were not surveyed steadily and broadly until the 1990s, with geographic disparity.
 
-In the next section, I describe how I leveraged this sparse and incomparable survey data to generate complete, comparable time-series TGOV scores using a latent variable model.
+In the next section, I describe how I leveraged this sparse and incomparable survey data to generate complete, comparable time-series trust scores using a latent variable model.
 
 \subsection{Measurements}\label{measurements}
 
 Latent variable measurement assumes the concept of interest is not directly observable but can be inferred from individuals' responses to relevant questions.
 Recently, pioneering studies have developed latent-variable models specifically tailored to cross-national survey data (see Claassen 2019; Caughey, O'Grady, and Warshaw 2019; McGann, Dellepiane-Avellaneda, and Bartle 2019; Kolczynska et al. 2020).
-In this paper, I adopt the Dynamic Comparative Public Opinion (DCPO) model developed by Solt (2020b), which is particularly suitable for handling sparse and incomparable data.
-The DCPO model not only provides a better fit to survey data compared to alternative models proposed by Claassen (2019) and Caughey, O'Grady, and Warshaw (2019; Solt 2020b), but it also effectively manages data sparsity, unlike other models that require dense survey coverage or additional population characteristics (McGann, Dellepiane-Avellaneda, and Bartle 2019; Kolczynska et al. 2020).
+In this paper, I adopt the Dynamic Comparative Public Opinion (DCPO) model developed by Solt (2020b), which provides a better fit to survey data compared to alternative models (Claassen 2019; Caughey, O'Grady, and Warshaw 2019), and effectively manages data sparsity without requiring dense survey coverage or additional population characteristics (McGann, Dellepiane-Avellaneda, and Bartle 2019; Kolczynska et al. 2020).
 
-As a population-level two-parameter ordinal logistic item response theory (IRT) model with country-specific item-bias terms, the DCPO model can address the two principal challenges posed by our source data: incomparability and sparsity.
-
-To tackle the incomparability of different survey questions, the DCPO model includes two parameters:
-First, the \emph{difficulty} parameter captures how much trust is required to respond affirmatively to each survey question.
-For example, ``a great deal'' trust toward national government reflects more trust in national government than ``somewhat'' trust in the question of ``Could you tell me how much trust you have in national government. Is it a great deal of trust, some trust, not very much trust or none at all?''
-Similarly, across questions, expressing ``a lot'' of trust in answering ``How much do you trust the national government to do what is right for (survey country) --- a lot, somewhat, not much, or not at all?'' from Pew Global Attitudes \& Trends likely indicates even higher trust levels than merely responding ``tend to trust'' in question that ``Please tell me if you tend to trust it or tend not to trust the government'' from Eurobarometer.
-
-Second, the \emph{dispersion} parameter indicates how sensitively survey responses reflect changes in the latent trust variable.
-In other words, a lower dispersion score means that a small change in responses corresponds closely to a substantial shift in the latent trust level.
+The DCPO model can address the two principal challenges posed by the source data: incomparability and sparsity.
+To tackle the incomparability of different survey questions, the model includes two parameters:
+the \emph{difficulty} parameter, which captures how much trust is required to respond affirmatively to each survey question (e.g., ``a great deal'' vs.~``somewhat'' trust), and the \emph{dispersion} parameter, which indicates how sensitively survey responses reflect changes in the latent trust variable.
+A lower dispersion score means that a small change in responses corresponds closely to a substantial shift in the latent trust level.
 Together, the difficulty and dispersion parameters allow the generation of comparable trust estimates across different surveys and questions.
-
-To address data sparsity, the DCPO model adopts random-walk priors for each country.
-Within each country, the model estimates missing latent values by modeling them as the previous year's estimate plus a random shock.
-Consequently, trust estimates are smoothed over time, allowing for estimation even in years with limited or no available data, although these estimates come with greater measurement uncertainty.
+For data sparsity, the model adopts random-walk priors, estimating missing latent values as the previous year's estimate plus a random shock. This approach smooths estimates over time, even in years with limited data, though with greater measurement uncertainty.
 For more detailed information about the DCPO model, see Solt (2020b, 3--8).
 
-Trust in government is estimated in DCPO model through the \texttt{DCPO} package for R (Solt 2020a), using four chains for 2000 iterations each with burn-in of 1000, keeping 1000 samples from each chain and resulting in a total of 4000 samples.
-The \(\hat{R}\) diagnostic had a mean value of 1.001 and maximum value of 1.01, indicating that the model converged.
-The dispersion parameters of the survey items indicate that all of our source data items load well on the latent variable (see Appendix A).
-
-The estimates in all 2,674 country-years spanned by the source data is the TGOV scores.
+Trust in government is estimated in DCPO model through the \texttt{DCPO} package for R (Solt 2020a).
+The estimates in all 2,674 country-years spanned by the source data are the TGOV scores.
 
 \section{Results}\label{results}
-
-\subsection{Estimating Trust in Government}\label{estimating-trust-in-government}
 
 \begin{figure}
 \centering
@@ -294,12 +256,10 @@ The estimates in all 2,674 country-years spanned by the source data is the TGOV 
 \caption{\label{fig:cs}TGOV Scores, Most Recent Available Year \label{cs_mry}}
 \end{figure}
 
-Figure\nobreakspace{}\ref{cs_mry} displays the most recent available TGOV score for each of the 116 countries and territories in the dataset.
-China and several Central Asian countries dominate the top positions, aligning with previous research indicating high levels of trust in these governments Byaro and Kinyondo (2020).
+Figure\nobreakspace{}\ref{cs_mry} displays the most recent available TGOV score for each of the 115 countries and territories in the dataset.
+China and several Central Asian countries dominate the top positions, aligning with previous research indicating high levels of trust in these governments (Schneider 2017; Paturyan and Melkonyan 2024; Byaro and Kinyondo 2020).
 Although respondents' understanding about political trust may differ across regime types, prior research has shown that trust in central political institutions can be comparably measured using latent variable models (Schneider 2017).
-The least corrupt counties, like Denmark, Switzerland, Finland, and Norway, also rank highly.
-On the other hand, the latest scores for Libya, Tunisia, Venezuela, Iraq, and Brazil have them as the places where the public has the lowest trust in government.
-These lower-ranked countries typically faced serious challenges around the years of the most recent available data, such as severe corruption (e.g., Venezuela and Iraq), election-related political violence (e.g., Brazil), or security threats and conflict (e.g., Tunisia and Libya).
+Less corrupt countries like Denmark and Switzerland rank highly, while Libya, Tunisia, Venezuela, Iraq, and Brazil show the lowest recent trust scores. These lower-ranked countries faced serious challenges around the time of measurement, including corruption (Venezuela, Iraq), election-related violence (Brazil), and conflict or security threats (Tunisia, Libya).
 
 \begin{figure}
 \centering
@@ -310,84 +270,79 @@ These lower-ranked countries typically faced serious challenges around the years
 Figure\nobreakspace{}\ref{ts_plots} illustrates changes in TGOV scores over time for 12 selected countries.
 The dataset's extensive geographic coverage enables comparative analyses of regions and countries often overlooked in prior research (see Wilson and Knutsen 2022).
 
+The different trends are observed across these countries.
 For example, public trust in government has risen prominently in countries such as Germany, India, the Philippines, and Nigeria---likely due to stable governance under Merkel in Germany and Modi in India (OECD 2025; Sardesai and Shastri 2023), populist administration policies in the Philippines (Curato 2017), and decreasing violence levels in Nigeria (Harding and Nwokolo 2024).
 In contrast, trust levels have remained consistently high in China (Tang 2016) and relatively low in Australia (Stoker, Evans, and Halupka 2018).
 
-In contrast, TGOV scores have steadily or dramatically declined in Greece, Mexico, Argentina, and the United States, primarily due to economic crises in Greece (Ervasti, Kouvo, and Venetoklis 2019), widespread corruption in Mexico (Morris and Klesner 2010), financial instability and political dysfunction in Argentina (Council on Foreign Relations 2024), and rising political polarization and partisanship in the United States (Marc J. Hetherington and Rudolph 2018).
+In contrast, TGOV scores have steadily or dramatically declined in Greece, Mexico, Argentina, and the United States, primarily due to economic crises in Greece (Ervasti, Kouvo, and Venetoklis 2019), widespread corruption in Mexico (Morris and Klesner 2010), financial instability and political dysfunction in Argentina (Council on Foreign Relations 2024), and rising political polarization and partisanship in the United States (Hetherington and Rudolph 2018).
 
 Some countries exhibit fluctuations, as seen in the United Kingdom and Turkey.
 In the UK, fluctuations could be associated with Brexit, sovereignty debates, and immigration issues (Guardian 2025).
 In Turkey, variations may reflect the personalization of political power and economic volatility (Pew Research Center 2024).
 
-The variations across countries and over time within countries offer valuable insights for scholars to explore in-depth.
-However, it is crucial to ensure that the TGOV scores accurately reflect trust in government across different contexts and time periods to ensure their effective use in academic research.
-To achieve this, I validate the TGOV scores through a combination of convergent and construct validation methods, which I describe in the following section
+The variations across countries and over time within countries in TGOV scores provides valuable opportunities for scholarly analysis.
+To ensure that the validity of TGOV scores across diverse contexts and over time, I conducted a series of convergent and construct validation tests, following standard practices for cross-national public opinion research (Hu et al. 2024)
 
 \begin{figure}
 \centering
 \includegraphics{trust_gov_files/figure-latex/internalval-1.pdf}
-\caption{\label{fig:internalval}Convergent Validation: Correlations Between TGOV Scores and Individual TGOV Source-Data Survey Items \label{internal_val}}
+\caption{\label{fig:internalval}Convergent Validation Through Individual TGOV Source Data Survey Items \label{inter_val}}
 \end{figure}
 
-Following a common approach to validate cross-national late opinion estimates (see, e.g., Hu et al. 2024), I validate TGOV scores through convergent validation and construct validation.
 Convergent validation tests whether a measure is empirically associated with alternative indicators of the same concept (Adcock and Collier 2001, 540).
-Specifically, I `internal' convergent validation tests (see, e.g., Caughey, O'Grady, and Warshaw 2019, 689; Solt 2020b, 10) by comparing TGOV scores against individual items from the source data that were used to generate them.
+Specifically, I conducted `internal' convergent validation tests (see, e.g., Caughey, O'Grady, and Warshaw 2019, 689; Solt 2020b, 10) by comparing TGOV scores against individual items from the source data that were used to generate them.
 
-The left panel in Figure\nobreakspace{}\ref{internal_val} shows a scatterplot of country-years in which the TGOV scores are plotted against the percentage of respondents who expressed at least some trust, meaning a response score no smaller than 6 on the question: ``Please tell me how much you personally trust each of the following institutions using a scale from 1 to 10, where {[}1{]} means `you do not trust the institution at all' and {[}10{]} means `you trust it completely' (Eurobarometer).''
-The strong correlation (R = 0.87) indicates that TGOV scores effectively capture variations in trust in national government across country-years.
+Figure\nobreakspace{}\ref{inter_val} presents three validation plots comparing TGOV scores with the percentage of respondents expressing at least some trust---calculated using responses equal to or above the median value of each scale.
+The left panel shows a scatterplot of country-years in which the TGOV scores are plotted against responses to the Eurobarometer question: ``Please tell me how much you personally trust each of the following institutions using a scale from 1 to 10, where {[}1{]} means `you do not trust the institution at all' and {[}10{]} means `you trust it completely'.''
+The strong correlation (R = 0.87) indicates that TGOV scores effectively capture variations in trust across country-years.
 
-The middle panel plots TGOV score against the percentage of respondents who expressed some trust in the question: ``How much do you trust the national government in your country? Do you trust them a lot, some, not much, or not at all?'' from the Wellcome Global Monitor Survey in 2018.
-Since all scales have been transformed to show positive trends with larger values indicating more trust, the `some trust' was at 3.
-This question was asked in the most countries in one survey over the past 10 years, and the strong correlation (R = 0.94) demonstrates the broad applicability of the TGOV scores in capturing trust across diverse contexts.
+The middle panel compares TGOV score with the responses to the question: ``How much do you trust the national government in your country?'' from the Wellcome Global Monitor Survey in 2018.
+This item was asked in more countries than any other trust question in a single survey over the past decade, and the strong correlation (R = 0.94) demonstrates the broad applicability of TGOV scores across diverse contexts.
 
-Finally, the right panel compares the trend of the longest item used since 1984 in the Germany Allbus survey: ``How much trust do you place in the FEDERAL GOVERNMENT? Please use this scale: 1 means you have absolutely no trust at all, and 7 means you have a great deal of trust.''
-The percentage is calculated by the proportion of respondents who gave a response of 5 or higher, relative to all respondents.
-The TGOV scores align with trends in trust in the executive branch over time, effectively capturing historical changes.
-In all tests, the percentages are calculated using the function in the code based on their respective median scales, and the correlations are evaluated by incorporating uncertainty in the measures.
+Finally, the right panel compares the trend of the longest item used since 1984 in the Germany Allbus survey: ``How much trust do you place in the federal government?''
+The TGOV scores align with the trend over time, effectively capturing historical changes.
+In all tests, the correlations are evaluated by incorporating uncertainty in the measures.
 
 \begin{figure}
 \centering
 \includegraphics{trust_gov_files/figure-latex/tgovextval-1.pdf}
-\caption{\label{fig:tgovextval}External Validation for Trust in Government \label{tgov_ev1}}
+\caption{\label{fig:tgovextval}External Validation Using Trust Data \label{tgov_ev1}}
 \end{figure}
 
 I then conducted three `external' convergent validation tests, using survey items that were not part of the TGOV score estimation but are theoretically related to trust in government.
 These three items include trust in elections, parliament, and public administration in their respective countries.
-Figure\nobreakspace{}\ref{tgov_ev1} displays the results of this group of validation tests.
 
-I plot the TGOV score against public trust in elections from the available data in the World Value Survey Wave 7\footnote{The current data in this analysis is based on surveys conducted before 2021. The future iteration will update more availabl data.}, which asked respondents how much confidence they have in elections (is it a great deal, quite a lot, not very much, or none at all?) in the left plot.
+Figure\nobreakspace{}\ref{tgov_ev1} displays the results of this group of validation tests.
+I plot the TGOV score against public trust in elections from the available data in the World Value Survey Wave 7\footnote{The current data in this analysis is based on surveys conducted before 2021. The future iteration will update more availabl data.}, which asked respondents how much confidence they have in elections in the left plot.
 The TGOV score is then compared against public confidence in parliament from the European Quality of Life Survey (EQLS) in the center plot and against the percentage of respondents who expressed trust in public administration in their country, as measured by Eurobarometer, in the right panel.
 
-Across all three tests, the TGOV measure was positively correlated with the three types of public trust, with the strongest correlation observed with trust in parliament{[}R = 0.82{]}, and moderate to strong correlations with trust in public administration {[}R = 0.74{]} and elections {[}R = 0.79{]}.
-All correlations across tests are estimated while accounting for uncertainty in the measures.
+Across all three tests, the TGOV measure was positively correlated with the three types of public trust, with the strongest correlation observed with trust in parliament{[}R = 0.82{]}, and moderate to strong correlations with trust in public administration {[}R = 0.74{]} and elections {[}R = 0.8{]}.
 
 \begin{figure}
 \centering
 \includegraphics{trust_gov_files/figure-latex/tgovextval2-1.pdf}
-\caption{\label{fig:tgovextval2}External Validation for Trust in Government \label{tgov_ev2}}
+\caption{\label{fig:tgovextval2}Construct Validation Using Perceived Corruption, Satisfaction, and Approval Rating Data \label{tgov_ev2}}
 \end{figure}
 
-I then conducted tests of construct validation.
-According to Adcock and Collier (2001, 542), construct validation assesses whether an indicator is empirically correlated with other indicators that are theoretically expected to be causally related to it.
+Construct validation, which assesses whether a measure empirically correlates with other indicators that are theoretically expected to be causally related (Adcock and Collier 2001, 542), was also conducted.
+I focused on three such indicators: the public's satisfaction with political system performance, the public's perception of corruption, and executive approval ratings.
+Abundant research has shown that trust is a strong predictor of satisfaction with political system performance (Hetherington and Rudolph 2018; Chanley, Rudolph, and Rahn 2000) and approval ratings (Citrin and Luks 2001; Miller and Borrelli 1991), while also being a negative consequence of perceived corruption (Anderson and Tverdova 2003).
 
-In this series of validation tests, I focused on three indicators that are theoretically causally related to trust in national government: the public's satisfaction with political system performance, the public's perception of corruption, and executive approval ratings.
-Abundant research has shown that trust is a strong predictor of satisfaction with political system performance (Marc J. Hetherington and Rudolph 2018; Chanley, Rudolph, and Rahn 2000) and approval ratings (Citrin and Luks 2001; Miller and Borrelli 1991; Citrin 1974), while also being a negative consequence of perceived corruption (Torgler, Garcia-Valiñas, and Macintyre 2011; Reisinger, Zaloznaya, and Claypool 2017; Anderson and Tverdova 2003).
-If the TGOV scores are a valid measure, I would expect to observe a positive relationship between TGOV and both satisfaction and approval ratings, but a negative relationship with perceptions of corruption.
 The results are presented in Figure\nobreakspace{}\ref{tgov_ev2}.
-As anticipated, there is a clear positive relationship between TGOV scores and satisfaction with political system performance, measured as the percentage of individuals expressing at least some satisfaction with political system performance in the WVS Wave 7, shown in the left panel.
+The left panel shows a clear positive relationship between TGOV scores and satisfaction with political system performance, measured as the percentage of individuals expressing at least some satisfaction with political system performance in the WVS Wave 7.
 
-A similar positive correlation between TGOV scores and executive approval ratings is observed in the right panel.
-Executive approval ratings are measured by the Executive Approval Project (version 2) (Carlin Ryan et al. 2019), and I used smoothed approval ratings for OECD countries in year of 2018 due to their better coverage.
-There is also a clear negative relationship between TGOV scores and perceptions of widespread corruption, as surveyed in Eurobarometer, the Comparative Study of Electoral Systems (CSES), and the WVS in year of 2017, shown in the center panel.
-This test confirms the expectation that when there is widespread perception of corruption in government, the public is less likely to trust their national government.
-In all three tests, the correlations are estimated with the uncertainty in the measures taken into account.
+A similar positive correlation between TGOV scores and executive approval ratings appears in the right panel.
+The approval ratings are drawn from smoothed estimates for OECD countries in 2018 from the Executive Approval Project (version 2) (Carlin Ryan et al. 2019).
 
-In sum, the convergent validation tests, including both internal and external validation (Figure\nobreakspace{}\ref{internal_val} and \nobreakspace{}\ref{tgov_ev1}), and the construct validation test (Figure\nobreakspace{}\ref{tgov_ev2}), provide strong evidence that the TGOV scores are a valid measure of public trust in national government.
+The center panel shows a negative relationship between TGOV scores and perceptions of widespread corruption, as surveyed in Eurobarometer, the Comparative Study of Electoral Systems (CSES), and the WVS in year of 2017.
+In all three tests, the direction of correlation aligns with theoretical expectations.
+
+In sum, all these validations provide strong evidence that the TGOV scores are a valid measure of public trust in national government.
 
 \section{Discussion \& Conclusion}\label{discussion-conclusion}
 
 Although political trust is a long-standing interdisciplinary topic studied by economists, political scientists, sociologists, and psychologists among others, its importance increases during governance crises, including but not limited to public health emergencies, climate change, and rising polarization and populism.
-However, our understanding of political trust has been limited to single countries or regions with rich longitudinal data, which may not generalize to other areas, or to snapshots of cross-sectional analysis that cannot capture changes over time (Kerr, King, and Wahman 2024; Kolczynska et al. 2020; Devine 2024).
+However, our understanding of political trust has been limited to single countries or regions with rich longitudinal data, which may not generalize to other areas, or to snapshots of cross-sectional analysis that cannot capture changes over time (Kolczynska et al. 2020; Devine 2024).
 The TGOV score allows scholars from various disciplines to explore the causes and consequences of trust in government across countries over time.
 
 To address missing data at the country-year level, random-walk priors were used in the DCPO model, as described in the methodology.
@@ -396,9 +351,7 @@ Ignoring this uncertainty will distort both statistical and substantial inferenc
 Therefore, I suggest that scholars using the TGOV data in their analyses incorporate measurement uncertainty into their models.
 There are several ways to account for uncertainty (see, e.g., Tai, Hu, and Solt 2024; Woo et al. Forthcoming), and to facilitate this process, the entire dataset from four chains has been provided in the dataverse, in addition to the mean measure of trust in government.
 
-The TGOV dataset will be updated regularly to include the most recent publicly available data.
-In addition to the dataset, a user-friendly dashboard will be available for scholars and the public to visualize trust in government for countries and years of their choosing.
-The current and future versions of the TGOV dataset offer invaluable opportunities for advancing the study of politics, governance, and elections.
+The TGOV dataset will be updated regularly to include the most recent publicly available data, offering invaluable opportunities for advancing the study of politics, governance, and state-society relations.
 
 \section*{References}\label{references}
 
@@ -421,9 +374,6 @@ Caughey, Devin, Tom O'Grady, and Christopher Warshaw. 2019. {``Policy Ideology i
 
 \bibitem[\citeproctext]{ref-chanley_origins_2000}
 Chanley, Virginia A., Thomas J. Rudolph, and Wendy M. Rahn. 2000. {``The {Origins} and {Consequences} of {Public} {Trust} in {Government}: {A} {Time} {Series} {Analysis}.''} \emph{Public Opinion Quarterly} 64 (3): 239--56.
-
-\bibitem[\citeproctext]{ref-citrin1974comment}
-Citrin, Jack. 1974. {``Comment: The Political Relevance of Trust in Government.''} \emph{American Political Science Review} 68 (3): 973--88.
 
 \bibitem[\citeproctext]{ref-citrin2001political}
 Citrin, Jack, and Samantha Luks. 2001. {``Political Trust Revisited: D{é}j{à} Vu All over Again?''} \emph{What Is It about Government That Americans Dislike}, 9--27.
@@ -458,11 +408,8 @@ Guardian, The. 2025. {``How COVID Changed the Way We Think.''} 2025. \url{https:
 \bibitem[\citeproctext]{ref-Harding2024}
 Harding, Robin, and Arinze Nwokolo. 2024. {``Terrorism, Trust, and Identity: Evidence from a Natural Experiment in Nigeria.''} \emph{American Journal of Political Science} 68 (3): 942--57.
 
-\bibitem[\citeproctext]{ref-hetherington2005trust}
-Hetherington, Marc J et al. 2005. \emph{Why Trust Matters: Declining Political Trust and the Demise of American Liberalism}. Princeton University Press.
-
 \bibitem[\citeproctext]{ref-Hetherington2018}
-Hetherington, Marc J., and Thomas J. Rudolph. 2018. {``Political {Trust} and {Polarization}.''} \emph{The Oxford Handbook of Social and Political Trust}, March.
+Hetherington, Marc J, and Thomas J Rudolph. 2018. {``Political Trust and Polarization.''} \emph{The Oxford Handbook of Social and Political Trust}, March.
 
 \bibitem[\citeproctext]{ref-Hooghe2013}
 Hooghe, Marc, and Sofie Marien. 2013. {``A Comparative Analysis of the Relation Between Political Trust and Forms of Political Participation in Europe.''} \emph{European Societies} 15 (1): 131--52.
@@ -475,9 +422,6 @@ Kerr, Nicholas, Bridgett A King, and Michael Wahman. 2024. {``The Global Crisis 
 
 \bibitem[\citeproctext]{ref-Kolczynska2020}
 Kolczynska, Marta, Paul-Christian Bürkner, Lauren Kennedy, and Aki Vehtari. 2020. {``Trust in State Institutions in Europe, 1989-2019.''}
-
-\bibitem[\citeproctext]{ref-letki2006investigating}
-Letki, Natalia. 2006. {``Investigating the Roots of Civic Morality: Trust, Social Capital, and Institutional Performance.''} \emph{Political Behavior} 28 (4): 305--25.
 
 \bibitem[\citeproctext]{ref-McGann2019}
 McGann, Anthony, Sebastian Dellepiane-Avellaneda, and John Bartle. 2019. {``Parallel Lines? Policy Mood in a Plurinational Democracy.''} \emph{Electoral Studies} 58: 48--57.
@@ -494,17 +438,11 @@ Norris, Pippa et al. 2002. \emph{Democratic Phoenix: Reinventing Political Activ
 \bibitem[\citeproctext]{ref-Oecd_trust2025}
 OECD. 2025. {``Trust in Government.''} \url{https://www.oecd.org/en/data/indicators/trust-in-government.html}.
 
-\bibitem[\citeproctext]{ref-oksanen2020regulation}
-Oksanen, Atte, Markus Kaakinen, Rita Latikka, Iina Savolainen, Nina Savela, and Aki Koivula. 2020. {``Regulation and Trust: 3-Month Follow-up Study on COVID-19 Mortality in 25 European Countries.''} \emph{JMIR Public Health and Surveillance} 6 (2): e19218.
-
 \bibitem[\citeproctext]{ref-Paturyan2024}
 Paturyan, Yevgenya Jenny, and Sara Melkonyan. 2024. {``Revolution, Covid-19, and War in Armenia: Impacts on Various Forms of Trust.''} \emph{Caucasus Survey} 1 (aop): 1--28.
 
 \bibitem[\citeproctext]{ref-Pewturks2024}
 Pew Research Center. 2024. {``Turks Lean Negative on Erdoğan, Give National Government Mixed Ratings.''} 2024. \url{https://www.pewresearch.org/global/2024/10/16/turks-lean-negative-on-erdogan-give-national-government-mixed-ratings/}.
-
-\bibitem[\citeproctext]{ref-Reisinger2017does}
-Reisinger, William M, Marina Zaloznaya, and Vicki L Hesli Claypool. 2017. {``Does Everyday Corruption Affect How Russians View Their Political Leadership?''} \emph{Post-Soviet Affairs} 33 (4): 255--75.
 
 \bibitem[\citeproctext]{ref-Rose2010}
 Rose, Richard, and William Mishler. 2010. {``The Impact of Macro-Economic Shock on Russians.''} \emph{Post-Soviet Affairs} 26 (1): 38--57.
@@ -524,23 +462,14 @@ Solt, Frederick. 2020a. {``{DCPO}: Dynamic Comparative Public Opinion.''} Availa
 \bibitem[\citeproctext]{ref-Solt2020c}
 ---------. 2020b. {``Modeling Dynamic Comparative Public Opinion.''} SocArXiv. \texttt{https://osf.io/\ preprints/socarxiv/d5n9p}.
 
-\bibitem[\citeproctext]{ref-Solt2019}
-Solt, Frederick, Yuehong Cassandra Tai, Yue Hu, Hyein Ko, and Byung-Deuk Woo. 2019. {``DCPOtools: Tools for Preparing Survey Data for DCPO.''}
-
 \bibitem[\citeproctext]{ref-Stoker2018}
 Stoker, Gerry, Mark Evans, and Max Halupka. 2018. {``Trust and Democracy in Australia: Democratic Decline and Renewal.''}
 
 \bibitem[\citeproctext]{ref-Tai2024}
 Tai, Yuehong Cassandra, Yue Hu, and Frederick Solt. 2024. {``Democracy, Public Support, and Measurement Uncertainty.''} \emph{American Political Science Review} 118 (1): 512--18.
 
-\bibitem[\citeproctext]{ref-Tai2025}
-Tai, Yuehong Cassandra, and Frederick Solt. 2025. {``Trust in Civil Servants: A Cross-National Dataset for Public Policy Research, 1986--2022.''}
-
 \bibitem[\citeproctext]{ref-Tang2016}
 Tang, Wenfang. 2016. \emph{Populist Authoritarianism: Chinese Political Culture and Regime Sustainability}. Oxford University Press.
-
-\bibitem[\citeproctext]{ref-Torgler2011participation}
-Torgler, Benno, Maria A Garcia-Valiñas, and Alison Macintyre. 2011. {``Participation in Environmental Organizations: An Empirical Analysis.''} \emph{Environment and Development Economics} 16 (5): 591--620.
 
 \bibitem[\citeproctext]{ref-tyler1990justice}
 Tyler, Tom R. 1990. {``Justice, Self-Interest, and the Legitimacy of Legal and Political Authority.''}
@@ -566,38 +495,5 @@ Zaki, Bishoy Louis, Francesco Nicoli, Ellen Wayenberg, and Bram Verschuere. 2022
 \end{CSLReferences}
 
 \pagebreak
-
-\section{Appendix A: Indicators Used in the Trust in Government Latent Variable Model}\label{appendix-a-indicators-used-in-the-trust-in-government-latent-variable-model}
-
-\noindent Table A1: Indicators Used in the Trust in Government Latent Variable Model
-
-\begingroup\fontsize{7}{9}\selectfont
-
-\begin{longtable}[t]{>{\raggedright\arraybackslash}p{7em}>{\raggedright\arraybackslash}p{7em}>{\raggedright\arraybackslash}p{7em}}
-\toprule
-Survey-Item-Code & Dispersion & Difficulties\\
-\midrule
-\endfirsthead
-\multicolumn{3}{@{}l}{\textit{(continued)}}\\
-\toprule
-Survey-Item-Code & Dispersion & Difficulties\\
-\midrule
-\endhead
-
-\endfoot
-\bottomrule
-\endlastfoot
-\cellcolor{gray!10}{PT\_natgov\_right\_4} & \cellcolor{gray!10}{\num{0.91}} & \cellcolor{gray!10}{-1.75, 1.15, 3.80}\\
-PT\_natgov\_7 & \num{0.43} & -1.63, -0.76, 0.04, 1.00, 2.14, 3.30\\
-\cellcolor{gray!10}{PT\_natgov\_right\_5} & \cellcolor{gray!10}{\num{0.82}} & \cellcolor{gray!10}{-1.78, 0.13, 2.08, 4.52}\\
-PT\_natgov\_4 & \num{0.77} & -1.13, 1.00, 3.54\\
-\cellcolor{gray!10}{PT\_natgov\_2} & \cellcolor{gray!10}{\num{1.43}} & \cellcolor{gray!10}{0.72}\\
-PT\_natgov\_10 & \num{0.79} & -1.51, -0.89, -0.30, 0.19, 1.06, 1.69, 2.54, 3.68, 4.54\\
-\cellcolor{gray!10}{PT\_dntrustgov\_4} & \cellcolor{gray!10}{\num{1.18}} & \cellcolor{gray!10}{-0.87, 1.34, 3.35}\\
-PT\_natgov\_11 & \num{0.91} & -1.83, -1.35, -0.76, -0.14, 0.41, 1.37, 2.05, 2.98, 4.29, 5.20\\
-\cellcolor{gray!10}{PT\_natgov\_5} & \cellcolor{gray!10}{\num{1.08}} & \cellcolor{gray!10}{-1.11, 0.62, 2.29, 4.88}\\
-PT\_natgov\_info\_5 & \num{1.14} & -2.38, 0.52, 2.37, 5.16\\*
-\end{longtable}
-\endgroup{}
 
 \end{document}
